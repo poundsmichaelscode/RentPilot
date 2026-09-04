@@ -1,0 +1,12 @@
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import { env } from "./config/env.js";
+import { api } from "./routes/index.js";
+import { errorHandler } from "./middleware/errors.js";
+export const app=express();
+app.use(helmet(),cors({origin:env.CLIENT_URL,credentials:true}),express.json({limit:"2mb"}),morgan("combined"));
+app.get("/health",(_req,res)=>res.json({status:"ok",service:"rentpilot-api"}));
+app.use("/api/v1",api);
+app.use(errorHandler);

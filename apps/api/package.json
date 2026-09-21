@@ -11,7 +11,8 @@
     "dev:worker": "tsx watch src/worker.ts",
     "start:worker": "node dist/worker.js",
     "test": "tsx --test src/**/*.test.ts",
-    "test:integration:payments": "tsx --test integration-tests/rent-payment.test.ts"
+    "test:integration:payments": "tsx --test integration-tests/rent-payment.test.ts",
+    "test:integration:expenses": "tsx --test integration-tests/expense-lifecycle.test.ts"
   },
   "dependencies": {
     "@rentpilot/shared": "*",

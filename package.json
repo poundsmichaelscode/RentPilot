@@ -14,7 +14,8 @@
     "docker:down": "docker compose down",
     "lint": "eslint apps packages --max-warnings=100",
     "test": "npm run test --workspaces --if-present",
-    "test:integration:payments": "npm run test:integration:payments -w @rentpilot/api"
+    "test:integration:payments": "npm run test:integration:payments -w @rentpilot/api",
+    "test:integration:expenses": "npm run test:integration:expenses -w @rentpilot/api"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

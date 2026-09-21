@@ -81,6 +81,29 @@ type ListResponse<T> = {
   data: T[];
 };
 
+type ExpenseSummaryResponse = {
+  success: true;
+  data: unknown[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+};
+
+const EMPTY_EXPENSE_RESPONSE:
+  ExpenseSummaryResponse = {
+    success: true,
+    data: [],
+    pagination: {
+      page: 1,
+      pageSize: 1,
+      total: 0,
+      totalPages: 0,
+    },
+  };
+
 type DashboardProps = {
   user: {
     displayName: string;
@@ -110,7 +133,16 @@ function humanize(value: string) {
 export default function Dashboard({
   user,
   signOut,
+  initialRole,
 }: DashboardProps) {
+  const canViewExpenses = [
+    "OWNER",
+    "ADMIN",
+    "PROPERTY_MANAGER",
+    "ACCOUNTANT",
+  ].includes(
+    initialRole ?? "",
+  );
   const [properties, setProperties] =
     useState<Property[]>([]);
 
@@ -132,6 +164,16 @@ export default function Dashboard({
   const [maintenance, setMaintenance] =
     useState<MaintenanceRequest[]>([]);
 
+  const [
+    expenseTotal,
+    setExpenseTotal,
+  ] = useState(0);
+
+  const [
+    pendingExpenseTotal,
+    setPendingExpenseTotal,
+  ] = useState(0);
+
   const [loading, setLoading] =
     useState(true);
 
@@ -151,6 +193,8 @@ export default function Dashboard({
           chargeResponse,
           paymentResponse,
           maintenanceResponse,
+          expenseResponse,
+          pendingExpenseResponse,
         ] = await Promise.all([
           apiFetch<ListResponse<Property>>(
             "/properties",
@@ -174,6 +218,22 @@ export default function Dashboard({
           apiFetch<ListResponse<MaintenanceRequest>>(
             "/maintenance",
           ),
+
+          canViewExpenses
+            ? apiFetch<ExpenseSummaryResponse>(
+                "/expenses?pageSize=1",
+              )
+            : Promise.resolve(
+                EMPTY_EXPENSE_RESPONSE,
+              ),
+
+          canViewExpenses
+            ? apiFetch<ExpenseSummaryResponse>(
+                "/expenses?pageSize=1&status=PENDING",
+              )
+            : Promise.resolve(
+                EMPTY_EXPENSE_RESPONSE,
+              ),
         ]);
 
         setProperties(
@@ -203,6 +263,16 @@ export default function Dashboard({
         setMaintenance(
           maintenanceResponse.data,
         );
+
+        setExpenseTotal(
+          expenseResponse
+            .pagination.total,
+        );
+
+        setPendingExpenseTotal(
+          pendingExpenseResponse
+            .pagination.total,
+        );
       } catch (err) {
         setError(
           err instanceof Error
@@ -213,7 +283,7 @@ export default function Dashboard({
         setLoading(false);
       }
     },
-    [],
+    [canViewExpenses],
   );
 
   useEffect(() => {
@@ -445,6 +515,12 @@ export default function Dashboard({
               Payments
             </Link>
 
+            {canViewExpenses ? (
+              <Link href="/expenses">
+                Expenses
+              </Link>
+            ) : null}
+
             <NotificationBell />
 
             <form
@@ -653,6 +729,42 @@ export default function Dashboard({
                   {inProgressMaintenance.length} in progress
                 </p>
               </article>
+
+              {canViewExpenses ? (
+                <article
+                  className={styles.card}
+                >
+                  <small>
+                    Expense records
+                  </small>
+
+                  <h2>
+                    {expenseTotal}
+                  </h2>
+
+                  <p>
+                    Recorded operating costs
+                  </p>
+                </article>
+              ) : null}
+
+              {canViewExpenses ? (
+                <article
+                  className={styles.card}
+                >
+                  <small>
+                    Pending expenses
+                  </small>
+
+                  <h2>
+                    {pendingExpenseTotal}
+                  </h2>
+
+                  <p>
+                    Awaiting settlement
+                  </p>
+                </article>
+              ) : null}
             </section>
 
             <section
@@ -982,6 +1094,28 @@ export default function Dashboard({
                 >
                   Maintenance
                 </Link>
+
+                {canViewExpenses ? (
+                  <Link
+                    className={
+                      styles.secondary
+                    }
+                    href="/expenses"
+                  >
+                    Expenses
+                  </Link>
+                ) : null}
+
+                {canViewExpenses ? (
+                  <Link
+                    className={
+                      styles.secondary
+                    }
+                    href="/expenses/new"
+                  >
+                    Record expense
+                  </Link>
+                ) : null}
 
                 <Link
                   className={

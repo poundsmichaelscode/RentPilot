@@ -75,7 +75,7 @@ export default async function Page() {
     .from(
       "organisation_members",
     )
-    .select("id")
+    .select("id,role")
     .eq(
       "user_id",
       user.id,
@@ -98,7 +98,9 @@ export default async function Page() {
     <Dashboard
       user={user}
       signOut="/logout"
-      initialRole="landlord"
+      initialRole={
+        memberships[0].role
+      }
     />
   );
 }

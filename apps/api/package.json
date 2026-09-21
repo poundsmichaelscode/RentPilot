@@ -12,7 +12,8 @@
     "start:worker": "node dist/worker.js",
     "test": "tsx --test src/**/*.test.ts",
     "test:integration:payments": "tsx --test integration-tests/rent-payment.test.ts",
-    "test:integration:expenses": "tsx --test integration-tests/expense-lifecycle.test.ts"
+    "test:integration:expenses": "tsx --test integration-tests/expense-lifecycle.test.ts",
+    "test:integration:reports": "tsx --test integration-tests/financial-report.test.ts"
   },
   "dependencies": {
     "@rentpilot/shared": "*",

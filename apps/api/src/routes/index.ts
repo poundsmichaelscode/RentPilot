@@ -11,6 +11,7 @@ import tenantActions from "./tenant-actions.js";
 import notifications from "./notifications.js";
 import auditLogs from "./audit-logs.js";
 import expenses from "./expenses.js";
+import reports from "./reports.js";
 import properties from "./properties.js";
 import units from "./units.js";
 import tenants from "./tenants.js";
@@ -148,6 +149,14 @@ api.use(
   requireAuth,
   requireOrganisation,
   expenses,
+);
+
+
+api.use(
+  "/reports",
+  requireAuth,
+  requireOrganisation,
+  reports,
 );
 
 

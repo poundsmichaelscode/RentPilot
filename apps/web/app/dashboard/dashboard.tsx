@@ -521,6 +521,12 @@ export default function Dashboard({
               </Link>
             ) : null}
 
+            {canViewExpenses ? (
+              <Link href="/reports">
+                Reports
+              </Link>
+            ) : null}
+
             <NotificationBell />
 
             <form
@@ -1114,6 +1120,17 @@ export default function Dashboard({
                     href="/expenses/new"
                   >
                     Record expense
+                  </Link>
+                ) : null}
+
+                {canViewExpenses ? (
+                  <Link
+                    className={
+                      styles.secondary
+                    }
+                    href="/reports"
+                  >
+                    Financial reports
                   </Link>
                 ) : null}
 

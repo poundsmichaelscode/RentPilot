@@ -579,3 +579,46 @@
     padding: 18px;
   }
 }
+
+/* ---------------------------------------------------------
+   Print / PDF support
+--------------------------------------------------------- */
+
+.noPrint {
+  display: inherit;
+}
+
+@media print {
+  .noPrint {
+    display: none !important;
+  }
+
+  .page {
+    min-height: auto;
+    background: #fff;
+  }
+
+  .shell {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+  }
+
+  .card,
+  .moneyCard {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  .tableWrap {
+    overflow: visible;
+  }
+
+  .table {
+    min-width: 0;
+  }
+
+  .section {
+    break-inside: avoid;
+  }
+}

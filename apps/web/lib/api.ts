@@ -90,3 +90,96 @@ export async function apiFetch<T>(
 
   return response.json() as Promise<T>;
 }
+
+export async function apiDownload(
+  path: string,
+  filename: string,
+): Promise<void> {
+  const supabase =
+    createClient();
+
+  const {
+    data: {
+      session,
+    },
+  } =
+    await supabase.auth
+      .getSession();
+
+  if (
+    !session?.access_token
+  ) {
+    throw new ApiError(
+      "Authentication is required.",
+      401,
+      "AUTHENTICATION_REQUIRED",
+    );
+  }
+
+  const response =
+    await fetch(
+      `/api${path}`,
+      {
+        headers: {
+          Authorization:
+            `Bearer ${session.access_token}`,
+        },
+
+        cache:
+          "no-store",
+      },
+    );
+
+  if (!response.ok) {
+    let body:
+      ApiErrorBody = {};
+
+    try {
+      body =
+        (await response.json()) as
+          ApiErrorBody;
+    } catch {
+      // Ignore malformed error payloads.
+    }
+
+    throw new ApiError(
+      body.error?.message ??
+        body.message ??
+        "Download failed.",
+
+      response.status,
+
+      body.error?.code,
+    );
+  }
+
+  const blob =
+    await response.blob();
+
+  const objectUrl =
+    URL.createObjectURL(
+      blob,
+    );
+
+  const link =
+    document.createElement(
+      "a",
+    );
+
+  link.href =
+    objectUrl;
+
+  link.download =
+    filename;
+
+  document.body
+    .appendChild(link);
+
+  link.click();
+
+  link.remove();
+
+  URL.revokeObjectURL(
+    objectUrl,
+  );
+}

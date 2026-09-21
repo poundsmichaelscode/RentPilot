@@ -20,6 +20,7 @@ type Property = {
   country?: string | null;
   description?: string | null;
   status?: string | null;
+  is_published?: boolean;
 };
 
 type Unit = {
@@ -84,6 +85,19 @@ export default function PropertyDetail({
 
   const [error, setError] =
     useState<string | null>(null);
+
+  const [
+    publishing,
+    setPublishing,
+  ] = useState(false);
+
+  const [
+    publishMessage,
+    setPublishMessage,
+  ] =
+    useState<string | null>(
+      null,
+    );
 
   useEffect(() => {
     async function load() {
@@ -158,6 +172,59 @@ export default function PropertyDetail({
     };
   }, [units]);
 
+  async function toggleMarketplace() {
+    if (!property) {
+      return;
+    }
+
+    try {
+      setPublishing(true);
+      setPublishMessage(null);
+
+      const nextState =
+        !property.is_published;
+
+      await apiFetch<{
+        success: true;
+        data: {
+          propertyId: string;
+          isPublished: boolean;
+          availableUnits: number;
+        };
+      }>(
+        `/properties/${property.id}/marketplace`,
+        {
+          method: "PATCH",
+
+          body: JSON.stringify({
+            isPublished:
+              nextState,
+          }),
+        },
+      );
+
+      setProperty({
+        ...property,
+        is_published:
+          nextState,
+      });
+
+      setPublishMessage(
+        nextState
+          ? "Property is now visible on the public marketplace."
+          : "Property has been removed from the public marketplace.",
+      );
+    } catch (err) {
+      setPublishMessage(
+        err instanceof Error
+          ? err.message
+          : "Unable to update marketplace publishing.",
+      );
+    } finally {
+      setPublishing(false);
+    }
+  }
+
   if (loading) {
     return (
       <main className={styles.page}>
@@ -206,6 +273,38 @@ export default function PropertyDetail({
           </div>
 
           <div className={styles.topActions}>
+            <button
+              type="button"
+              className={
+                property.is_published
+                  ? styles.secondaryButton
+                  : styles.primaryButton
+              }
+              onClick={
+                toggleMarketplace
+              }
+              disabled={
+                publishing
+              }
+            >
+              {publishing
+                ? "Updating…"
+                : property.is_published
+                  ? "Unpublish"
+                  : "Publish to marketplace"}
+            </button>
+
+            {property.is_published ? (
+              <Link
+                href={`/marketplace/${property.id}`}
+                className={
+                  styles.secondaryButton
+                }
+              >
+                View listing
+              </Link>
+            ) : null}
+
             <Link
               href="/tenants/new"
               className={styles.secondaryButton}
@@ -221,6 +320,16 @@ export default function PropertyDetail({
             </Link>
           </div>
         </nav>
+
+        {publishMessage ? (
+          <div
+            className={
+              styles.marketplaceNotice
+            }
+          >
+            {publishMessage}
+          </div>
+        ) : null}
 
         <section className={styles.hero}>
           <div className={styles.propertyMark}>

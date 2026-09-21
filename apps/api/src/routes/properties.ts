@@ -19,6 +19,12 @@ const propertyTypeSchema = z.enum([
   "other",
 ]);
 
+const marketplacePublishingSchema =
+  z.object({
+    isPublished:
+      z.boolean(),
+  });
+
 const createPropertySchema = z.object({
   name: z.string().trim().min(2).max(120),
 
@@ -485,159 +491,141 @@ router.get(
 
 
 
-router.get(
-  "/:id",
-  async (req, res, next) => {
+router.patch(
+  "/:id/marketplace",
+
+  requireRole(
+    "OWNER",
+    "ADMIN",
+    "PROPERTY_MANAGER",
+  ),
+
+  async (
+    req,
+    res,
+    next,
+  ) => {
     try {
       const propertyId =
-        z.string().uuid().parse(
-          req.params.id,
+        z.string()
+          .uuid()
+          .parse(
+            req.params.id,
+          );
+
+      const input =
+        marketplacePublishingSchema.parse(
+          req.body,
         );
 
-      const organisationId =
-        req.membership!
-          .organisationId;
+      const {
+        data,
+        error,
+      } = await supabase.rpc(
+        "set_property_marketplace_publishing",
+        {
+          p_user_id:
+            req.user!.id,
 
-      const [
-        propertyResult,
-        unitsResult,
-      ] = await Promise.all([
-        supabase
-          .from("properties")
-          .select(
-            `
-            id,
-            organisation_id,
-            name,
-            property_type,
-            address,
-            city,
-            state,
-            country,
-            description,
-            amenities,
-            monthly_rent,
-            images,
-            is_published,
-            status,
-            created_at,
-            updated_at
-            `,
-          )
-          .eq("id", propertyId)
-          .eq(
-            "organisation_id",
-            organisationId,
-          )
-          .maybeSingle(),
+          p_organisation_id:
+            req.membership!
+              .organisationId,
 
-        supabase
-          .from("units")
-          .select(
-            `
-            id,
-            unit_number,
-            unit_type,
-            bedrooms,
-            bathrooms,
-            floor,
-            monthly_rent,
-            security_deposit,
-            status,
-            created_at,
-            updated_at
-            `,
-          )
-          .eq(
-            "property_id",
+          p_property_id:
             propertyId,
+
+          p_is_published:
+            input.isPublished,
+        },
+      );
+
+      if (error) {
+        if (
+          error.message.includes(
+            "MARKETPLACE_PUBLISH_FORBIDDEN",
           )
-          .eq(
-            "organisation_id",
-            organisationId,
+        ) {
+          return res
+            .status(403)
+            .json({
+              success: false,
+
+              error: {
+                code:
+                  "MARKETPLACE_PUBLISH_FORBIDDEN",
+
+                message:
+                  "You do not have permission to publish marketplace listings.",
+              },
+            });
+        }
+
+        if (
+          error.message.includes(
+            "PROPERTY_NOT_FOUND",
           )
-          .order(
-            "unit_number",
-            {
-              ascending: true,
-            },
-          ),
-      ]);
+        ) {
+          return res
+            .status(404)
+            .json({
+              success: false,
 
-      if (propertyResult.error) {
-        return next(
-          propertyResult.error,
-        );
+              error: {
+                code:
+                  "PROPERTY_NOT_FOUND",
+
+                message:
+                  "Property was not found.",
+              },
+            });
+        }
+
+        if (
+          error.message.includes(
+            "MARKETPLACE_REQUIRES_VACANT_UNIT",
+          )
+        ) {
+          return res
+            .status(409)
+            .json({
+              success: false,
+
+              error: {
+                code:
+                  "MARKETPLACE_REQUIRES_VACANT_UNIT",
+
+                message:
+                  "A property must have at least one vacant unit before it can be published.",
+              },
+            });
+        }
+
+        if (
+          error.message.includes(
+            "MARKETPLACE_PROPERTY_NOT_ACTIVE",
+          )
+        ) {
+          return res
+            .status(409)
+            .json({
+              success: false,
+
+              error: {
+                code:
+                  "MARKETPLACE_PROPERTY_NOT_ACTIVE",
+
+                message:
+                  "Only active properties can be published.",
+              },
+            });
+        }
+
+        return next(error);
       }
-
-      if (!propertyResult.data) {
-        return res.status(404).json({
-          success: false,
-
-          error: {
-            code:
-              "PROPERTY_NOT_FOUND",
-
-            message:
-              "Property was not found.",
-          },
-        });
-      }
-
-      if (unitsResult.error) {
-        return next(
-          unitsResult.error,
-        );
-      }
-
-      const units =
-        unitsResult.data ?? [];
-
-      const occupiedUnits =
-        units.filter(
-          (unit) =>
-            unit.status ===
-            "OCCUPIED",
-        ).length;
-
-      const vacantUnits =
-        units.filter(
-          (unit) =>
-            unit.status ===
-            "VACANT",
-        ).length;
 
       return res.json({
         success: true,
-
-        data: {
-          ...propertyResult.data,
-
-          units,
-
-          summary: {
-            totalUnits:
-              units.length,
-
-            occupiedUnits,
-
-            vacantUnits,
-
-            monthlyRent:
-              units.reduce(
-                (
-                  total,
-                  unit,
-                ) =>
-                  total +
-                  Number(
-                    unit.monthly_rent ??
-                      0,
-                  ),
-                0,
-              ),
-          },
-        },
+        data,
       });
     } catch (error) {
       return next(error);

@@ -562,3 +562,24 @@
     flex-direction: column;
   }
 }
+
+.topActions button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.topActions button:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.marketplaceNotice {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid #cfe1d7;
+  border-radius: 9px;
+  background: #edf7f1;
+  color: #285d47;
+  font-size: 12px;
+  line-height: 1.5;
+}

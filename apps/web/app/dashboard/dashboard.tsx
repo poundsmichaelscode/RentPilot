@@ -51,6 +51,7 @@ type RentCharge = {
   lease_id: string;
   due_date: string;
   expected_amount: number | string;
+  waived_amount: number | string;
   paid_amount: number | string;
   balance: number | string;
   status: string;
@@ -92,6 +93,53 @@ type ExpenseSummaryResponse = {
   };
 };
 
+type DashboardFinancialProperty = {
+  propertyId: string;
+  propertyName: string;
+  rentCollected:
+    | number
+    | string;
+  paidExpenses:
+    | number
+    | string;
+  pendingExpenses:
+    | number
+    | string;
+  netCashFlow:
+    | number
+    | string;
+};
+
+type DashboardFinancialReport = {
+  currency: string;
+
+  summary: {
+    rentCollected:
+      | number
+      | string;
+
+    paidExpenses:
+      | number
+      | string;
+
+    pendingExpenses:
+      | number
+      | string;
+
+    netCashFlow:
+      | number
+      | string;
+  };
+
+  properties:
+    DashboardFinancialProperty[];
+};
+
+type FinancialReportResponse = {
+  success: true;
+  data: DashboardFinancialReport;
+};
+
 const EMPTY_EXPENSE_RESPONSE:
   ExpenseSummaryResponse = {
     success: true,
@@ -113,12 +161,26 @@ type DashboardProps = {
   initialRole: string | null;
 };
 
-function money(value: number | string) {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
+function money(
+  value: number | string,
+  currency = "NGN",
+) {
+  try {
+    return new Intl.NumberFormat(
+      "en-NG",
+      {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 0,
+      },
+    ).format(
+      Number(value || 0),
+    );
+  } catch {
+    return `${currency} ${Number(
+      value || 0,
+    ).toLocaleString()}`;
+  }
 }
 
 function humanize(value: string) {
@@ -174,6 +236,14 @@ export default function Dashboard({
     setPendingExpenseTotal,
   ] = useState(0);
 
+  const [
+    financialReport,
+    setFinancialReport,
+  ] =
+    useState<DashboardFinancialReport | null>(
+      null,
+    );
+
   const [loading, setLoading] =
     useState(true);
 
@@ -195,6 +265,7 @@ export default function Dashboard({
           maintenanceResponse,
           expenseResponse,
           pendingExpenseResponse,
+          financialResponse,
         ] = await Promise.all([
           apiFetch<ListResponse<Property>>(
             "/properties",
@@ -234,6 +305,17 @@ export default function Dashboard({
             : Promise.resolve(
                 EMPTY_EXPENSE_RESPONSE,
               ),
+
+          canViewExpenses
+            ? apiFetch<FinancialReportResponse>(
+                `/reports/financial?from=${new Date()
+                  .getUTCFullYear()}-01-01&to=${new Date()
+                  .toISOString()
+                  .slice(0, 10)}`,
+              )
+            : Promise.resolve(
+                null,
+              ),
         ]);
 
         setProperties(
@@ -272,6 +354,11 @@ export default function Dashboard({
         setPendingExpenseTotal(
           pendingExpenseResponse
             .pagination.total,
+        );
+
+        setFinancialReport(
+          financialResponse?.data ??
+            null,
         );
       } catch (err) {
         setError(
@@ -482,6 +569,142 @@ export default function Dashboard({
             100,
         )
       : 0;
+
+  const currentYear =
+    new Date()
+      .getUTCFullYear();
+
+  const yearStart =
+    `${currentYear}-01-01`;
+
+  const yearEnd =
+    `${currentYear}-12-31`;
+
+  const ytdCharges =
+    charges.filter(
+      (charge) =>
+        charge.due_date >=
+          yearStart &&
+        charge.due_date <=
+          yearEnd,
+    );
+
+  const ytdCollectibleRent =
+    ytdCharges.reduce(
+      (sum, charge) =>
+        sum +
+        Math.max(
+          Number(
+            charge.expected_amount ||
+              0,
+          ) -
+            Number(
+              charge.waived_amount ||
+                0,
+            ),
+          0,
+        ),
+      0,
+    );
+
+  const ytdCollectedAgainstCharges =
+    ytdCharges.reduce(
+      (sum, charge) =>
+        sum +
+        Number(
+          charge.paid_amount ||
+            0,
+        ),
+      0,
+    );
+
+  const collectionRate =
+    ytdCollectibleRent > 0
+      ? Math.min(
+          100,
+          Math.round(
+            (
+              ytdCollectedAgainstCharges /
+              ytdCollectibleRent
+            ) *
+              100,
+          ),
+        )
+      : 0;
+
+  const financialCurrency =
+    financialReport
+      ?.currency ??
+    "NGN";
+
+  const ytdRentCollected =
+    Number(
+      financialReport
+        ?.summary
+        .rentCollected ??
+        0,
+    );
+
+  const ytdPaidExpenses =
+    Number(
+      financialReport
+        ?.summary
+        .paidExpenses ??
+        0,
+    );
+
+  const ytdNetCashFlow =
+    Number(
+      financialReport
+        ?.summary
+        .netCashFlow ??
+        0,
+    );
+
+  const propertyPerformance =
+    financialReport
+      ?.properties ??
+    [];
+
+  const today =
+    new Date()
+      .toISOString()
+      .slice(0, 10);
+
+  const leaseExpiryCutoffDate =
+    new Date();
+
+  leaseExpiryCutoffDate.setUTCDate(
+    leaseExpiryCutoffDate.getUTCDate() +
+      60,
+  );
+
+  const leaseExpiryCutoff =
+    leaseExpiryCutoffDate
+      .toISOString()
+      .slice(0, 10);
+
+  const expiringLeases =
+    leases
+      .filter(
+        (lease) =>
+          [
+            "ACTIVE",
+            "EXPIRING_SOON",
+          ].includes(
+            lease.status,
+          ) &&
+          lease.end_date >=
+            today &&
+          lease.end_date <=
+            leaseExpiryCutoff,
+      )
+      .sort(
+        (a, b) =>
+          a.end_date.localeCompare(
+            b.end_date,
+          ),
+      );
 
   return (
     <main className={styles.page}>
@@ -773,12 +996,279 @@ export default function Dashboard({
               ) : null}
             </section>
 
+            {canViewExpenses ? (
+              <section
+                className={styles.section}
+              >
+                <div
+                  className={
+                    styles.sectionTitle
+                  }
+                >
+                  <span
+                    className={
+                      styles.eyebrow
+                    }
+                  >
+                    YEAR TO DATE
+                  </span>
+
+                  <h2>
+                    Financial health
+                  </h2>
+
+                  <p>
+                    Cash performance and rent
+                    collection for {currentYear}.
+                  </p>
+                </div>
+
+                <div
+                  className={
+                    styles.statGrid
+                  }
+                >
+                  <article
+                    className={
+                      styles.moneyCard
+                    }
+                  >
+                    <small>
+                      Net cash flow
+                    </small>
+
+                    <strong>
+                      {money(
+                        ytdNetCashFlow,
+                        financialCurrency,
+                      )}
+                    </strong>
+
+                    <p>
+                      Rent collected less
+                      paid operating expenses
+                    </p>
+                  </article>
+
+                  <article
+                    className={
+                      styles.card
+                    }
+                  >
+                    <small>
+                      Rent collected
+                    </small>
+
+                    <h2>
+                      {money(
+                        ytdRentCollected,
+                        financialCurrency,
+                      )}
+                    </h2>
+
+                    <p>
+                      Cash received YTD
+                    </p>
+                  </article>
+
+                  <article
+                    className={
+                      styles.card
+                    }
+                  >
+                    <small>
+                      Paid expenses
+                    </small>
+
+                    <h2>
+                      {money(
+                        ytdPaidExpenses,
+                        financialCurrency,
+                      )}
+                    </h2>
+
+                    <p>
+                      Operating costs YTD
+                    </p>
+                  </article>
+
+                  <article
+                    className={
+                      styles.card
+                    }
+                  >
+                    <small>
+                      Collection rate
+                    </small>
+
+                    <h2>
+                      {collectionRate}%
+                    </h2>
+
+                    <p>
+                      {money(
+                        ytdCollectedAgainstCharges,
+                        financialCurrency,
+                      )}{" "}
+                      collected against{" "}
+                      {money(
+                        ytdCollectibleRent,
+                        financialCurrency,
+                      )}{" "}
+                      due
+                    </p>
+                  </article>
+                </div>
+              </section>
+            ) : null}
+
+            <section
+              className={styles.section}
+            >
+              <div
+                className={
+                  styles.sectionTitle
+                }
+              >
+                <span
+                  className={
+                    styles.eyebrow
+                  }
+                >
+                  NEEDS ATTENTION
+                </span>
+
+                <h2>
+                  Portfolio attention
+                </h2>
+
+                <p>
+                  Operational issues that
+                  may need action soon.
+                </p>
+              </div>
+
+              <div
+                className={
+                  styles.statGrid
+                }
+              >
+                <article
+                  className={
+                    styles.card
+                  }
+                >
+                  <small>
+                    Overdue exposure
+                  </small>
+
+                  <h2>
+                    {money(
+                      totalOverdue,
+                      financialCurrency,
+                    )}
+                  </h2>
+
+                  <p>
+                    {
+                      overdueCharges.length
+                    }{" "}
+                    overdue rent{" "}
+                    {overdueCharges.length ===
+                    1
+                      ? "charge"
+                      : "charges"}
+                  </p>
+
+                  <Link href="/rent">
+                    Review overdue rent →
+                  </Link>
+                </article>
+
+                <article
+                  className={
+                    styles.card
+                  }
+                >
+                  <small>
+                    Expiring leases
+                  </small>
+
+                  <h2>
+                    {
+                      expiringLeases.length
+                    }
+                  </h2>
+
+                  <p>
+                    Ending within the
+                    next 60 days
+                  </p>
+
+                  <Link href="/leases">
+                    Review leases →
+                  </Link>
+                </article>
+
+                <article
+                  className={
+                    styles.card
+                  }
+                >
+                  <small>
+                    Vacant units
+                  </small>
+
+                  <h2>
+                    {
+                      vacantUnits.length
+                    }
+                  </h2>
+
+                  <p>
+                    Units currently
+                    marked vacant
+                  </p>
+
+                  <Link href="/properties/new">
+                    Manage properties →
+                  </Link>
+                </article>
+
+                <article
+                  className={
+                    styles.card
+                  }
+                >
+                  <small>
+                    Urgent maintenance
+                  </small>
+
+                  <h2>
+                    {
+                      urgentMaintenance.length
+                    }
+                  </h2>
+
+                  <p>
+                    Open urgent
+                    maintenance requests
+                  </p>
+
+                  <Link href="/maintenance">
+                    Review maintenance →
+                  </Link>
+                </article>
+              </div>
+            </section>
+
             <section
               style={{
                 display: "grid",
                 gridTemplateColumns:
                   "repeat(auto-fit, minmax(320px, 1fr))",
                 gap: 24,
+                marginTop: 24,
               }}
             >
               <article
@@ -1002,6 +1492,497 @@ export default function Dashboard({
                 )}
               </article>
             </section>
+
+            <section
+              className={styles.card}
+              style={{
+                marginTop: 24,
+              }}
+            >
+              <div
+                className={
+                  styles.header
+                }
+              >
+                <div>
+                  <span
+                    className={
+                      styles.eyebrow
+                    }
+                  >
+                    LEASE WATCH
+                  </span>
+
+                  <h2>
+                    Upcoming expiries
+                  </h2>
+                </div>
+
+                <Link href="/leases">
+                  All leases →
+                </Link>
+              </div>
+
+              {expiringLeases.length ===
+              0 ? (
+                <div
+                  className={
+                    styles.empty
+                  }
+                >
+                  No active leases expire
+                  within the next 60 days.
+                </div>
+              ) : (
+                <div
+                  className={
+                    styles.list
+                  }
+                >
+                  {expiringLeases
+                    .slice(0, 5)
+                    .map((lease) => {
+                      const tenant =
+                        tenantById.get(
+                          lease.tenant_id,
+                        );
+
+                      const unit =
+                        unitById.get(
+                          lease.unit_id,
+                        );
+
+                      const property =
+                        unit
+                          ? propertyById.get(
+                              unit.property_id,
+                            )
+                          : undefined;
+
+                      return (
+                        <div
+                          key={
+                            lease.id
+                          }
+                          className={
+                            styles.row
+                          }
+                        >
+                          <div>
+                            <strong>
+                              {tenant
+                                ?.full_name ??
+                                "Tenant"}
+                            </strong>
+
+                            <small>
+                              {property
+                                ?.name ??
+                                "Property"}
+                              {unit
+                                ? ` · Unit ${unit.unit_number}`
+                                : ""}
+                            </small>
+                          </div>
+
+                          <div>
+                            <strong>
+                              {
+                                lease.end_date
+                              }
+                            </strong>
+
+                            <small>
+                              Lease end
+                            </small>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </section>
+
+            {canViewExpenses ? (
+              <section
+                className={styles.card}
+                style={{
+                  marginTop: 24,
+                }}
+              >
+                <div
+                  className={
+                    styles.header
+                  }
+                >
+                  <div>
+                    <span
+                      className={
+                        styles.eyebrow
+                      }
+                    >
+                      PROPERTY PERFORMANCE
+                    </span>
+
+                    <h2>
+                      Financial performance
+                    </h2>
+
+                    <p>
+                      Year-to-date cash
+                      performance by property.
+                    </p>
+                  </div>
+
+                  <Link href="/reports">
+                    Full report →
+                  </Link>
+                </div>
+
+                {propertyPerformance.length ===
+                0 ? (
+                  <div
+                    className={
+                      styles.empty
+                    }
+                  >
+                    No property financial
+                    activity yet.
+                  </div>
+                ) : (
+                  <div
+                    className={
+                      styles.tableWrap
+                    }
+                  >
+                    <table
+                      className={
+                        styles.table
+                      }
+                    >
+                      <thead>
+                        <tr>
+                          <th>
+                            Property
+                          </th>
+
+                          <th>
+                            Rent collected
+                          </th>
+
+                          <th>
+                            Expenses
+                          </th>
+
+                          <th>
+                            Net cash flow
+                          </th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {propertyPerformance.map(
+                          (
+                            property,
+                          ) => (
+                            <tr
+                              key={
+                                property.propertyId
+                              }
+                            >
+                              <td>
+                                <strong>
+                                  {
+                                    property.propertyName
+                                  }
+                                </strong>
+                              </td>
+
+                              <td>
+                                {money(
+                                  property.rentCollected,
+                                  financialCurrency,
+                                )}
+                              </td>
+
+                              <td>
+                                {money(
+                                  property.paidExpenses,
+                                  financialCurrency,
+                                )}
+                              </td>
+
+                              <td>
+                                <strong>
+                                  {money(
+                                    property.netCashFlow,
+                                    financialCurrency,
+                                  )}
+                                </strong>
+                              </td>
+                            </tr>
+                          ),
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+            ) : null}
+
+            {canViewExpenses ? (
+              <section
+                className={styles.card}
+                style={{
+                  marginTop: 24,
+                }}
+              >
+                <div
+                  className={
+                    styles.header
+                  }
+                >
+                  <div>
+                    <span
+                      className={
+                        styles.eyebrow
+                      }
+                    >
+                      PROPERTY PERFORMANCE
+                    </span>
+
+                    <h2>
+                      Financial performance
+                    </h2>
+
+                    <p>
+                      Year-to-date cash
+                      performance by property.
+                    </p>
+                  </div>
+
+                  <Link href="/reports">
+                    Full report →
+                  </Link>
+                </div>
+
+                {propertyPerformance.length ===
+                0 ? (
+                  <div
+                    className={
+                      styles.empty
+                    }
+                  >
+                    No property financial
+                    activity yet.
+                  </div>
+                ) : (
+                  <div
+                    className={
+                      styles.tableWrap
+                    }
+                  >
+                    <table
+                      className={
+                        styles.table
+                      }
+                    >
+                      <thead>
+                        <tr>
+                          <th>
+                            Property
+                          </th>
+
+                          <th>
+                            Rent collected
+                          </th>
+
+                          <th>
+                            Expenses
+                          </th>
+
+                          <th>
+                            Net cash flow
+                          </th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {propertyPerformance.map(
+                          (
+                            property,
+                          ) => (
+                            <tr
+                              key={
+                                property.propertyId
+                              }
+                            >
+                              <td>
+                                <strong>
+                                  {
+                                    property.propertyName
+                                  }
+                                </strong>
+                              </td>
+
+                              <td>
+                                {money(
+                                  property.rentCollected,
+                                  financialCurrency,
+                                )}
+                              </td>
+
+                              <td>
+                                {money(
+                                  property.paidExpenses,
+                                  financialCurrency,
+                                )}
+                              </td>
+
+                              <td>
+                                <strong>
+                                  {money(
+                                    property.netCashFlow,
+                                    financialCurrency,
+                                  )}
+                                </strong>
+                              </td>
+                            </tr>
+                          ),
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+            ) : null}
+
+            {canViewExpenses ? (
+              <section
+                className={styles.card}
+                style={{
+                  marginTop: 24,
+                }}
+              >
+                <div
+                  className={
+                    styles.header
+                  }
+                >
+                  <div>
+                    <span
+                      className={
+                        styles.eyebrow
+                      }
+                    >
+                      PROPERTY PERFORMANCE
+                    </span>
+
+                    <h2>
+                      Financial performance
+                    </h2>
+
+                    <p>
+                      Year-to-date cash
+                      performance by property.
+                    </p>
+                  </div>
+
+                  <Link href="/reports">
+                    Full report →
+                  </Link>
+                </div>
+
+                {propertyPerformance.length ===
+                0 ? (
+                  <div
+                    className={
+                      styles.empty
+                    }
+                  >
+                    No property financial
+                    activity yet.
+                  </div>
+                ) : (
+                  <div
+                    className={
+                      styles.tableWrap
+                    }
+                  >
+                    <table
+                      className={
+                        styles.table
+                      }
+                    >
+                      <thead>
+                        <tr>
+                          <th>
+                            Property
+                          </th>
+
+                          <th>
+                            Rent collected
+                          </th>
+
+                          <th>
+                            Expenses
+                          </th>
+
+                          <th>
+                            Net cash flow
+                          </th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {propertyPerformance.map(
+                          (
+                            property,
+                          ) => (
+                            <tr
+                              key={
+                                property.propertyId
+                              }
+                            >
+                              <td>
+                                <strong>
+                                  {
+                                    property.propertyName
+                                  }
+                                </strong>
+                              </td>
+
+                              <td>
+                                {money(
+                                  property.rentCollected,
+                                  financialCurrency,
+                                )}
+                              </td>
+
+                              <td>
+                                {money(
+                                  property.paidExpenses,
+                                  financialCurrency,
+                                )}
+                              </td>
+
+                              <td>
+                                <strong>
+                                  {money(
+                                    property.netCashFlow,
+                                    financialCurrency,
+                                  )}
+                                </strong>
+                              </td>
+                            </tr>
+                          ),
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+            ) : null}
 
             <section
               className={styles.card}

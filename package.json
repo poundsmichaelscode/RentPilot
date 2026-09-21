@@ -2,14 +2,28 @@
   "name": "rentpilot",
   "private": true,
   "version": "1.0.0",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "concurrently -n WEB,API -c cyan,green \"npm run dev -w @rentpilot/web\" \"npm run dev -w @rentpilot/api\"",
     "build": "npm run build -w @rentpilot/shared && npm run build -w @rentpilot/api && npm run build -w @rentpilot/web",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "docker:up": "docker compose up --build",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "lint": "eslint apps packages --max-warnings=100",
+    "test": "npm run test --workspaces --if-present",
+    "test:integration:payments": "npm run test:integration:payments -w @rentpilot/api"
   },
-  "devDependencies": { "concurrently": "^9.2.0" },
-  "engines": { "node": ">=20" }
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "concurrently": "^9.2.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.2.6",
+    "typescript-eslint": "^8.70.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
 }

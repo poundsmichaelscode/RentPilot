@@ -1,0 +1,581 @@
+.page {
+  min-height: 100vh;
+  background: #f5f7f6;
+  color: #18221e;
+}
+
+.shell {
+  width: min(1180px, calc(100% - 36px));
+  margin: 0 auto;
+  padding: 26px 0 70px;
+}
+
+/* ---------------------------------------------------------
+   Top navigation
+--------------------------------------------------------- */
+
+.topbar {
+  min-height: 54px;
+  margin-bottom: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.back {
+  color: #355246;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.back:hover {
+  color: #173f30;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nav a {
+  padding: 8px 10px;
+  border-radius: 7px;
+  color: #68756f;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.nav a:hover {
+  background: #e9eeec;
+  color: #173f30;
+}
+
+/* ---------------------------------------------------------
+   Page headers
+--------------------------------------------------------- */
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 26px;
+}
+
+.header h1 {
+  margin: 7px 0 8px;
+  color: #18221e;
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+
+.header h2 {
+  margin: 5px 0;
+  color: #18221e;
+  font-size: 22px;
+  letter-spacing: -0.025em;
+}
+
+.header p {
+  max-width: 680px;
+  margin: 0;
+  color: #728079;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.eyebrow {
+  display: inline-block;
+  color: #64786f;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+/* ---------------------------------------------------------
+   Buttons
+--------------------------------------------------------- */
+
+.primary,
+.secondary {
+  min-height: 42px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 17px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.primary {
+  border: 1px solid #173f30;
+  background: #173f30;
+  color: #fff;
+}
+
+.primary:hover {
+  background: #102f24;
+  border-color: #102f24;
+}
+
+.secondary {
+  border: 1px solid #d7dfdb;
+  background: #fff;
+  color: #29483a;
+}
+
+.secondary:hover {
+  border-color: #acbbb4;
+  background: #fafcfb;
+}
+
+.primary:active,
+.secondary:active {
+  transform: translateY(1px);
+}
+
+.primary:disabled,
+.secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------
+   Cards
+--------------------------------------------------------- */
+
+.card {
+  padding: 23px;
+  border: 1px solid #e0e6e3;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow:
+    0 7px 24px rgba(20, 45, 34, 0.035);
+}
+
+.card > small {
+  display: block;
+  color: #77857e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.card > h2 {
+  margin: 9px 0 7px;
+  font-size: 27px;
+  letter-spacing: -0.04em;
+}
+
+.card > p {
+  margin: 0;
+  color: #85918b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------
+   Lists / rows
+--------------------------------------------------------- */
+
+.list {
+  display: grid;
+  gap: 11px;
+}
+
+.row {
+  min-height: 68px;
+  padding: 15px 17px;
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 1.5fr)
+    minmax(120px, 1fr)
+    minmax(120px, 1fr)
+    auto;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #e8ecea;
+  border-radius: 10px;
+  background: #fff;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.row:hover {
+  border-color: #ccd7d2;
+  box-shadow:
+    0 7px 18px rgba(20, 45, 34, 0.04);
+  transform: translateY(-1px);
+}
+
+.row strong {
+  display: block;
+  color: #223129;
+  font-size: 13px;
+}
+
+.row small {
+  display: block;
+  margin-top: 4px;
+  color: #8c9792;
+  font-size: 11px;
+}
+
+.row span {
+  color: #526059;
+  font-size: 12px;
+}
+
+.row a {
+  color: #173f30;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.row a:hover {
+  text-decoration: underline;
+}
+
+/* ---------------------------------------------------------
+   Status badges
+--------------------------------------------------------- */
+
+.status,
+.badge {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #eef3f0;
+  color: #496057;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* ---------------------------------------------------------
+   Forms
+--------------------------------------------------------- */
+
+.form {
+  display: grid;
+  gap: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.form label,
+.grid label {
+  display: grid;
+  gap: 8px;
+  color: #34483e;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.form input,
+.form select,
+.form textarea,
+.grid input,
+.grid select,
+.grid textarea,
+.card input,
+.card select,
+.card textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 13px;
+  border: 1px solid #cfd8d4;
+  border-radius: 9px;
+  background: #fff;
+  color: #17201c;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.form input:focus,
+.form select:focus,
+.form textarea:focus,
+.grid input:focus,
+.grid select:focus,
+.grid textarea:focus,
+.card input:focus,
+.card select:focus,
+.card textarea:focus {
+  border-color: #356750;
+  box-shadow:
+    0 0 0 3px rgba(53, 103, 80, 0.1);
+}
+
+.form textarea,
+.grid textarea,
+.card textarea {
+  resize: vertical;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* ---------------------------------------------------------
+   Empty / loading / errors
+--------------------------------------------------------- */
+
+.empty {
+  padding: 44px 24px;
+  border: 1px dashed #d4ddd9;
+  border-radius: 12px;
+  background: #fafcfb;
+  color: #7d8983;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.error {
+  margin-bottom: 18px;
+  padding: 13px 15px;
+  border: 1px solid #e6c3c3;
+  border-radius: 9px;
+  background: #fff7f7;
+  color: #9e3838;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------
+   Financial highlight cards
+--------------------------------------------------------- */
+
+.moneyCard {
+  padding: 24px;
+  border-radius: 14px;
+  background: #102f24;
+  color: #fff;
+}
+
+.moneyCard small {
+  color: #a9c6b8;
+}
+
+.moneyCard strong {
+  display: block;
+  margin: 9px 0 3px;
+  font-size: 29px;
+  letter-spacing: -0.04em;
+}
+
+.moneyCard p {
+  color: #c9d8d1;
+}
+
+/* ---------------------------------------------------------
+   Table support
+--------------------------------------------------------- */
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e2e7e5;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+
+.table th {
+  padding: 13px 16px;
+  background: #f7f9f8;
+  color: #68776f;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+}
+
+.table td {
+  padding: 15px 16px;
+  border-top: 1px solid #edf0ef;
+  color: #47564e;
+  font-size: 12px;
+}
+
+.table tr:hover td {
+  background: #fbfcfc;
+}
+
+/* ---------------------------------------------------------
+   Dashboard visual polish
+--------------------------------------------------------- */
+
+.dashboardHero {
+  margin-bottom: 22px;
+  padding: 28px;
+  border-radius: 17px;
+  background: #102f24;
+  color: #fff;
+}
+
+.dashboardHero h1 {
+  margin: 7px 0;
+  color: #fff;
+}
+
+.dashboardHero p {
+  color: #c7d8d0;
+}
+
+.dashboardHero .eyebrow {
+  color: #a9c6b8;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.section {
+  margin-top: 30px;
+}
+
+.sectionTitle {
+  margin-bottom: 14px;
+}
+
+.sectionTitle h2 {
+  margin: 5px 0;
+  font-size: 24px;
+  letter-spacing: -0.035em;
+}
+
+.sectionTitle p {
+  margin: 0;
+  color: #7a8780;
+  font-size: 13px;
+}
+
+/* ---------------------------------------------------------
+   Responsive
+--------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .row {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .statGrid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .shell {
+    width: min(100% - 24px, 1180px);
+    padding-top: 16px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .nav {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+
+  .nav a {
+    flex: 0 0 auto;
+  }
+
+  .header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .header h1 {
+    font-size: 32px;
+  }
+
+  .header > a,
+  .header > button {
+    width: 100%;
+  }
+
+  .grid,
+  .statGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .full {
+    grid-column: auto;
+  }
+
+  .row {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .actions > * {
+    width: 100%;
+  }
+
+  .card {
+    padding: 18px;
+  }
+}

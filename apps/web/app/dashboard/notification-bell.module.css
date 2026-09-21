@@ -1,0 +1,40 @@
+.bell {
+  position: relative;
+  min-height: 36px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #d8e1dd;
+  border-radius: 9px;
+  background: #fff;
+  color: #344c40;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.bell:hover {
+  border-color: #b9ccc2;
+  background: #f7faf8;
+}
+
+.icon {
+  font-size: 16px;
+  line-height: 1;
+  transform: rotate(45deg);
+}
+
+.badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #183e30;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+}

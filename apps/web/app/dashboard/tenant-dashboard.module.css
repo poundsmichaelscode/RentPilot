@@ -1,0 +1,388 @@
+.page {
+  min-height: 100vh;
+  background: #f7f8f7;
+  color: #19241f;
+}
+
+.shell {
+  width: min(1120px, calc(100% - 36px));
+  margin: 0 auto;
+  padding: 24px 0 70px;
+}
+
+.topbar {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #183e30;
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.brand > span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #183e30;
+  color: #fff;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #859089;
+  font-size: 11px;
+}
+
+.nav a {
+  color: #344d41;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.hero {
+  margin-top: 24px;
+  padding: 35px;
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  border-radius: 20px;
+  background: #eef4f1;
+  border: 1px solid #dce7e2;
+}
+
+.eyebrow {
+  color: #547065;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.hero h1 {
+  max-width: 680px;
+  margin: 8px 0 16px;
+  font-size: clamp(32px, 5vw, 50px);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.propertyName {
+  margin: 0 0 4px;
+  color: #253c32;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.address {
+  margin: 0;
+  color: #6e7f77;
+  font-size: 13px;
+}
+
+.unitBadge {
+  min-width: 155px;
+  align-self: center;
+  padding: 20px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #d8e3de;
+}
+
+.unitBadge small {
+  display: block;
+  color: #829188;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.unitBadge strong {
+  display: block;
+  margin: 6px 0;
+  font-size: 20px;
+}
+
+.unitBadge span {
+  color: #697971;
+  font-size: 11px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns:
+    1.5fr repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.paymentCard,
+.metricCard {
+  min-height: 130px;
+  padding: 22px;
+  border-radius: 14px;
+}
+
+.paymentCard {
+  background: #183e30;
+  color: #fff;
+}
+
+.metricCard {
+  background: #fff;
+  border: 1px solid #e0e6e3;
+}
+
+.paymentCard > span:first-child,
+.metricCard > span:first-child {
+  display: block;
+  margin-bottom: 9px;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.paymentCard > span:first-child {
+  color: #a9c8ba;
+}
+
+.metricCard > span:first-child {
+  color: #7d8b84;
+}
+
+.paymentCard strong,
+.metricCard strong {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 26px;
+  letter-spacing: -0.04em;
+}
+
+.paymentCard p {
+  margin: 0;
+  color: #ccddd5;
+  font-size: 11px;
+}
+
+.metricCard p {
+  margin: 0;
+  color: #839089;
+  font-size: 11px;
+}
+
+.dateValue {
+  font-size: 19px !important;
+}
+
+.current,
+.overdue {
+  width: fit-content;
+  margin-top: 14px;
+  padding: 5px 8px;
+  display: block;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.current {
+  background: rgba(255,255,255,.12);
+  color: #e4f2eb;
+}
+
+.overdue {
+  background: #fff1e9;
+  color: #9b4c24;
+}
+
+.quickActions {
+  margin-top: 34px;
+}
+
+.quickActions h2 {
+  margin: 6px 0 16px;
+  font-size: 25px;
+  letter-spacing: -0.035em;
+}
+
+.actionGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.actionGrid a {
+  padding: 19px;
+  border: 1px solid #e0e6e3;
+  border-radius: 12px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.actionGrid a:hover {
+  transform: translateY(-2px);
+  border-color: #b9c9c1;
+  box-shadow:
+    0 10px 24px rgba(24, 52, 40, .05);
+}
+
+.actionGrid b {
+  display: block;
+  font-size: 13px;
+}
+
+.actionGrid span {
+  display: block;
+  margin-top: 6px;
+  color: #849089;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 34px;
+}
+
+.panel {
+  padding: 22px;
+  border: 1px solid #e0e6e3;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.panelHead h2 {
+  margin: 5px 0 17px;
+  font-size: 21px;
+}
+
+.list {
+  display: grid;
+  gap: 9px;
+}
+
+.row {
+  padding: 13px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-top: 1px solid #edf0ef;
+}
+
+.row:first-child {
+  border-top: 0;
+}
+
+.row strong {
+  display: block;
+  font-size: 12px;
+}
+
+.row span,
+.row small {
+  display: block;
+  margin-top: 3px;
+  color: #849089;
+  font-size: 10px;
+}
+
+.status {
+  width: fit-content;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #eef3f0;
+  color: #496057 !important;
+  font-weight: 800;
+}
+
+.empty {
+  padding: 25px 10px;
+  color: #89958f;
+  text-align: center;
+  font-size: 11px;
+}
+
+.notice,
+.loading,
+.error {
+  margin-top: 20px;
+  padding: 24px;
+  border-radius: 13px;
+  background: #fff;
+  border: 1px solid #e0e6e3;
+}
+
+.notice strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.notice p {
+  margin: 0;
+  color: #75837c;
+  line-height: 1.6;
+}
+
+.error {
+  color: #9b3838;
+  background: #fff7f7;
+  border-color: #ebcaca;
+}
+
+@media (max-width: 900px) {
+  .metrics {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .actionGrid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .shell {
+    width: calc(100% - 24px);
+  }
+
+  .nav > span {
+    display: none;
+  }
+
+  .hero {
+    padding: 24px;
+    flex-direction: column;
+  }
+
+  .unitBadge {
+    width: auto;
+    align-self: stretch;
+  }
+
+  .metrics,
+  .actionGrid,
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+}

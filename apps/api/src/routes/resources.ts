@@ -1,13 +1,6 @@
 import { Router } from "express";
 import { supabase } from "../config/supabase.js";
 const router=Router();
-router.get("/workspace",async(req,res)=>{const uid=req.user!.id; const [{data:profile},{data:properties},{data:landlordTenancies},{data:tenantTenancies}]=await Promise.all([supabase.from("profiles").select("*").eq("id",uid).single(),supabase.from("properties").select("*").eq("landlord_id",uid),supabase.from("tenancies").select("*,properties(*)").eq("landlord_id",uid),supabase.from("tenancies").select("*,properties(*)").eq("tenant_id",uid).eq("status","active").limit(1)]); res.json({profile,properties:profile?.role==="tenant"?(tenantTenancies??[]).map((x:any)=>x.properties):(properties??[]),tenancies:profile?.role==="tenant"?tenantTenancies:landlordTenancies});});
-router.get("/tenancies",async(req,res)=>{const uid=req.user!.id; const {data,error}=await supabase.from("tenancies").select("*,properties(*)").or(`landlord_id.eq.${uid},tenant_id.eq.${uid}`); if(error)throw error; res.json({data});});
-router.get("/rent-records",async(req,res)=>{const {data,error}=await supabase.from("rent_records").select("*,tenancies!inner(*)").or(`landlord_id.eq.${req.user!.id},tenant_id.eq.${req.user!.id}`,{referencedTable:"tenancies"}); if(error)throw error; res.json({data});});
-router.post("/rent-records",async(req,res)=>{const {data,error}=await supabase.from("rent_records").insert(req.body).select().single(); if(error)throw error; res.status(201).json({data});});
-router.patch("/rent-records/:id",async(req,res)=>{const {data,error}=await supabase.from("rent_records").update({status:req.body.status,confirmed_at:new Date().toISOString()}).eq("id",req.params.id).select().single(); if(error)throw error; res.json({data});});
-router.get("/complaints",async(req,res)=>{const {data,error}=await supabase.from("complaints").select("*").eq("tenant_id",req.user!.id); if(error)throw error; res.json({data});});
-router.post("/complaints",async(req,res)=>{const {data,error}=await supabase.from("complaints").insert({...req.body,tenant_id:req.user!.id}).select().single(); if(error)throw error; res.status(201).json({data});});
 router.get("/settings",async(req,res)=>{const {data,error}=await supabase.from("profiles").select("*").eq("id",req.user!.id).single(); if(error)throw error; res.json({data});});
 router.patch("/settings",async(req,res)=>{const allowed=((({full_name,phone,address}:any)=>({full_name,phone,address})))(req.body); const {data,error}=await supabase.from("profiles").update(allowed).eq("id",req.user!.id).select().single(); if(error)throw error; res.json({data});});
 export default router;

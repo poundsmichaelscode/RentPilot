@@ -1,27 +1,1011 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
-type Row={id:number;[k:string]:string|number|boolean|null};type Data={properties:Row[];tenancies:Row[];records:Row[];complaints:Row[];bills:Row[];team:Row[];profile:Row|null;subscription:Row|null;plan:string};
-const empty:Data={properties:[],tenancies:[],records:[],complaints:[],bills:[],team:[],profile:null,subscription:null,plan:"free"};const cash=(n:unknown)=>new Intl.NumberFormat("en-NG",{style:"currency",currency:"NGN",maximumFractionDigits:0}).format(Number(n||0));
-const tabs=["Overview","Marketplace","Properties","Tenancies","Rent records","Reminders","Complaints & bills","Team & access","Subscription","Settings"];
-function Marketplace({tenant,properties}:{tenant:boolean;properties:Row[]}){const [listings,setListings]=useState<Row[]>([]),[email,setEmail]=useState(""),[query,setQuery]=useState(""),[max,setMax]=useState(""),[form,setForm]=useState(false),[message,setMessage]=useState("");const load=()=>fetch("/api/marketplace").then(r=>r.json()).then(j=>{setListings(j.listings||[]);setEmail(j.userEmail||"")});useEffect(()=>{load()},[]);const publish=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();const r=await fetch("/api/marketplace",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(Object.fromEntries(new FormData(e.currentTarget)))}),j=await r.json();setMessage(r.ok?"Listing published":j.error);if(r.ok){setForm(false);load()}};const remove=async(id:number)=>{await fetch("/api/marketplace",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({id})});load()};const filtered=listings.filter(x=>`${x.title} ${x.city} ${x.state} ${x.propertyName}`.toLowerCase().includes(query.toLowerCase())&&(!max||Number(x.rentAmount)<=Number(max)));return <div className="marketplace"><div className="market-hero"><div><small>RENTPILOT MARKETPLACE</small><h2>Find a place that feels right.</h2><p>Search RentPilot listings and contact landlords directly.</p></div>{!tenant&&<button className="button cream" onClick={()=>setForm(!form)}>+ Publish a rental</button>}</div>{message&&<p className="notice">{message}</p>}{form&&<form className="listing-form app-card" onSubmit={publish}><h3>Publish property for rent</h3><div className="form-row"><label>Property<select name="propertyId">{properties.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><label>Listing title<input name="title" required placeholder="Bright 2-bedroom apartment"/></label></div><div className="form-row"><label>City<input name="city" required/></label><label>State<input name="state" required/></label></div><div className="form-row thirds"><label>Monthly rent<input name="rentAmount" type="number" required/></label><label>Bedrooms<input name="bedrooms" type="number" min="1" defaultValue="1"/></label><label>Bathrooms<input name="bathrooms" type="number" min="1" defaultValue="1"/></label></div><label>Description<textarea name="description" rows={4} required/></label><label>Contact phone / WhatsApp<input name="contactPhone" required placeholder="+2348012345678"/></label><div className="modal-actions"><button type="button" className="button ghost" onClick={()=>setForm(false)}>Cancel</button><button className="button">Publish listing</button></div></form>}<div className="market-search app-card"><label>⌕<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search location or property"/></label><label>Maximum rent<input value={max} onChange={e=>setMax(e.target.value)} type="number" placeholder="Any price"/></label><b>{filtered.length} homes found</b></div><div className="listing-grid">{filtered.map((x,i)=><article className="listing-card" key={x.id}><div className="listing-photo"><img src={x.imageKey?`/api/assets/property/${x.propertyId}`:`/property-${i%4+1}.png`} alt={String(x.title)}/><span>Available</span></div><div className="listing-body"><small>{x.city}, {x.state}</small><h3>{x.title}</h3><p>{x.description}</p><div className="listing-features"><span>🛏 {x.bedrooms} bed</span><span>🚿 {x.bathrooms} bath</span></div><div className="listing-foot"><b>{cash(x.rentAmount)}<small>/month</small></b>{x.landlordEmail===email?<button onClick={()=>remove(x.id)}>Remove</button>:<a target="_blank" href={`https://wa.me/${String(x.contactPhone).replace(/\D/g,"")}?text=${encodeURIComponent(`Hello, I am interested in ${x.title} listed on RentPilot.`)}`}>Contact landlord</a>}</div></div></article>)}{!filtered.length&&<Empty text={tenant?"No homes match your search yet.":"No active listings. Publish one of your properties for rent."}/>}</div></div>}
-export default function Dashboard({user,signOut,initialRole}:{user:{displayName:string,email:string},signOut:string,initialRole:string|null}){const [data,setData]=useState(empty),[tab,setTab]=useState("Overview"),[modal,setModal]=useState(""),[note,setNote]=useState("");const load=()=>fetch("/api/workspace").then(r=>r.json()).then(setData);useEffect(()=>{const start=async()=>{if(initialRole)await fetch("/api/role",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({role:initialRole})});load()};start();document.documentElement.classList.toggle("dark-app",localStorage.getItem("rentpilot-theme")==="dark")},[initialRole]);const tenant=data.profile?.role==="tenant",landlord=!tenant;
- const submit=async(e:React.FormEvent<HTMLFormElement>,action:string)=>{e.preventDefault();const f=new FormData(e.currentTarget);let endpoint="/api/workspace",body:BodyInit,headers:HeadersInit|undefined;if(["property","receipt","bill"].includes(action)){endpoint=action==="property"?"/api/properties":action==="bill"?"/api/bills":"/api/receipts";body=f}else{if(action==="subscription")endpoint="/api/subscribe";f.set("action",action);body=JSON.stringify(Object.fromEntries(f));headers={"content-type":"application/json"}}const r=await fetch(endpoint,{method:"POST",body,headers}),j=await r.json();if(r.ok&&j.checkoutUrl){location.href=j.checkoutUrl;return}setNote(r.ok?"Saved successfully":j.error||"Could not save");if(r.ok){load();setTimeout(()=>setModal(""),650)}};
- const patch=async(action:string,id:number)=>{await fetch("/api/workspace",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({action,id})});load()};const confirmed=useMemo(()=>data.records.filter(x=>x.status==="confirmed").reduce((s,x)=>s+Number(x.amount),0),[data]);
- return <main className="app-shell"><aside className="app-nav"><a className="brand" href="/"><span>R</span>RentPilot</a><div className="role-chip">{tenant?"TENANT ACCOUNT":`${data.plan.toUpperCase()} LANDLORD`}</div>{tabs.filter(x=>landlord||!["Team & access","Subscription","Reminders"].includes(x)).map(x=><button onClick={()=>setTab(x)} className={tab===x?"active":""} key={x}>{navIcon(x)} {x}</button>)}<div className="account"><b>{user.displayName}</b><small>{user.email}</small><a href={signOut}>Sign out</a></div></aside><section className="workspace"><header className="workspace-head"><div><small>{tenant?"TENANT PORTAL":`${data.plan.toUpperCase()} PLAN`}</small><h1>{tab}</h1><p>{subtitle(tab,tenant)}</p></div>{tab==="Properties"&&landlord?<button className="button" onClick={()=>setModal("property")}>+ Add property</button>:tab==="Rent records"&&tenant?<button className="button" onClick={()=>setModal("receipt")}>+ Upload rent receipt</button>:tab==="Complaints & bills"&&tenant?<div className="head-actions"><button className="button ghost" onClick={()=>setModal("complaint")}>Make complaint</button><button className="button" onClick={()=>setModal("bill")}>Upload bill</button></div>:null}</header><View tab={tab} data={data} tenant={tenant} confirmed={confirmed} open={setModal} patch={patch}/></section>{modal&&<Modal kind={modal} data={data} close={()=>{setModal("");setNote("")}} submit={submit} note={note}/>}</main>}
-function View({tab,data,tenant,confirmed,open,patch}:{tab:string;data:Data;tenant:boolean;confirmed:number;open:(s:string)=>void;patch:(a:string,id:number)=>void}){if(tab==="Overview")return <><div className="app-stats"><Metric t="Confirmed rent" v={cash(confirmed)}/><Metric t={tenant?"My rented property":"Properties"} v={tenant?(data.properties.length?1:0):data.properties.length}/><Metric t="Active tenancy" v={tenant?(data.tenancies.length?1:0):data.tenancies.length}/><Metric t="Pending reviews" v={data.records.filter(x=>x.status==="pending").length+data.bills.filter(x=>x.status==="pending").length}/></div>{tenant&&data.properties[0]&&<section className="tenant-home-card"><img src={data.properties[0].imageKey?`/api/assets/property/${data.properties[0].id}`:"/property-1.png"} alt={String(data.properties[0].name)}/><div><small>MY CURRENT HOME</small><h2>{data.properties[0].name}</h2><p>{data.properties[0].address}</p><span>{data.tenancies[0]?.unit||"Unit assigned"}</span></div></section>}<div className="panel-grid"><Panel title="Recent activity"><RentTable rows={data.records.slice(0,5)} tenant={tenant} patch={patch}/></Panel><Panel title="Quick actions"><div className="quick-actions">{!tenant&&<><button onClick={()=>open("property")}>＋ Add property</button><button onClick={()=>open("tenancy")}>＋ Add tenant</button></>} {tenant&&<><button onClick={()=>open("receipt")}>▧ Upload rent receipt</button><button onClick={()=>open("complaint")}>⚠ Make complaint</button><button onClick={()=>open("bill")}>⌁ Upload utility bill</button></>}</div></Panel></div></>;
- if(tab==="Marketplace")return <Marketplace tenant={tenant} properties={data.properties}/>;
- if(tab==="Properties")return <><div className="plan-banner"><b>{data.plan==="premium"?"Premium: unlimited properties":"Free plan: 2 properties maximum"}</b><span>{data.properties.length}{data.plan==="free"?" / 2":""} properties used</span>{data.plan==="free"&&<button onClick={()=>open("subscribe")}>Upgrade</button>}</div><div className="property-grid">{data.properties.map((p,i)=><article className="property-card" key={p.id}><img src={p.imageKey?`/api/assets/property/${p.id}`:`/property-${i%4+1}.png`} alt={`${p.name} property`}/><div><small>{p.units} UNIT{Number(p.units)>1?"S":""}</small><h3>{p.name}</h3><p>{p.address}</p><b>{cash(p.monthlyRent)} <small>/ month</small></b></div></article>)}{!data.properties.length&&<Empty text="No properties yet. Add your first property with a photo."/>}</div></>;
- if(tab==="Tenancies")return <Panel title="Tenants and leases" action={!tenant?<button className="button button-small" onClick={()=>open("tenancy")}>+ Add tenant</button>:null}><Table head={["Tenant","Property / unit","Monthly rent","Status"]} rows={data.tenancies.map(t=>[t.tenantName,String(t.unit),cash(t.rentAmount),String(t.status)])}/></Panel>;
- if(tab==="Rent records")return <><div className="payment-methods">{[["🏦","Bank transfer","Most common"],["💵","Cash deposit","Add teller receipt"],["🧾","Cheque","Add cheque evidence"],["📱","Other","Keep a clear record"]].map(x=><article key={x[1]}><i>{x[0]}</i><div><b>{x[1]}</b><small>{x[2]}</small></div></article>)}</div><Panel title="Rent payment receipts"> <RentTable rows={data.records} tenant={tenant} patch={patch}/></Panel></>;
- if(tab==="Reminders")return <Panel title="Rent reminders" action={<button className="button button-small" onClick={()=>open("reminder")}>Send reminder</button>}><p className="muted">Send a ready-made reminder by email or WhatsApp. You review every message before it leaves.</p><Table head={["Tenant","Unit","Rent","WhatsApp"]} rows={data.tenancies.map(t=>[t.tenantName,t.unit,cash(t.rentAmount),t.phone||"Not added"])}/></Panel>;
- if(tab==="Complaints & bills")return <div className="split-panels"><Panel title="Property complaints"><Table head={["Subject","Category","Priority","Status","Action"]} rows={data.complaints.map(c=>[c.subject,c.category,c.priority,c.status,!tenant&&c.status!=="resolved"?<button onClick={()=>patch("resolve-complaint",c.id)}>Resolve</button>:"—"])}/></Panel><Panel title="Utility bill receipts"><Table head={["Type","Period","Amount","Status","Receipt"]} rows={data.bills.map(b=>[b.billType,b.period,cash(b.amount),b.status,!tenant&&b.status==="pending"?<button onClick={()=>patch("approve-bill",b.id)}>Approve</button>:<a target="_blank" href={`/api/assets/bill/${b.id}`}>View</a>])}/></Panel></div>;
- if(tab==="Team & access")return <Panel title="Team members" action={<button className="button button-small" onClick={()=>open("team")}>Invite member</button>}><Table head={["Email","Role","Status"]} rows={data.team.map(m=>[m.memberEmail,m.role,m.status])}/></Panel>;
- if(tab==="Settings")return <Settings profile={data.profile}/>;
- return <div className="subscription-view"><div><small>CURRENT PLAN</small><h2>{data.plan==="premium"?"Premium":"Free"}</h2><p>{data.plan==="premium"?"Unlimited properties, receipts and team access.":"Add up to two properties and try the complete rent workflow."}</p></div><article><span>PREMIUM</span><h3>₦5,000<small>/month</small></h3><ul><li>Unlimited properties</li><li>Unlimited tenants and receipts</li><li>Team access</li><li>Complaints and bill approvals</li></ul><button className="button" onClick={()=>open("subscribe")}>Upgrade securely</button></article></div>}
-function Metric({t,v}:{t:string;v:React.ReactNode}){return <div className="app-card"><small>{t}</small><strong>{v}</strong></div>}function Panel({title,action,children}:{title:string;action?:React.ReactNode;children:React.ReactNode}){return <section className="app-card panel"><div className="panel-head"><h2>{title}</h2>{action}</div>{children}</section>}function Empty({text}:{text:string}){return <div className="empty">{text}</div>}
-function Table({head,rows}:{head:string[];rows:React.ReactNode[][]}){return rows.length?<div className="table-wrap"><table className="table"><thead><tr>{head.map(x=><th key={x}>{x}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={i}>{r.map((x,j)=><td key={j}>{x}</td>)}</tr>)}</tbody></table></div>:<Empty text="Nothing here yet."/>}function RentTable({rows,tenant,patch}:{rows:Row[];tenant:boolean;patch:(a:string,id:number)=>void}){return <Table head={["Tenant","Period","Method","Amount","Status","Receipt"]} rows={rows.map(r=>[r.tenantName||r.tenantEmail,r.period,r.method||"—",cash(r.amount),<span className="pill" key="s">{r.status}</span>,!tenant&&r.status==="pending"?<button onClick={()=>patch("confirm-rent",r.id)}>Confirm</button>:r.receiptName?<a target="_blank" href={`/api/assets/rent/${r.id}`}>View</a>:"—"])}/>}
-function Modal({kind,data,close,submit,note}:{kind:string;data:Data;close:()=>void;submit:(e:React.FormEvent<HTMLFormElement>,a:string)=>void;note:string}){const [gateway,setGateway]=useState("paystack"),title:{[k:string]:string}={property:"Add property",tenancy:"Add tenant",receipt:"Upload rent receipt",bill:"Upload bill payment",complaint:"Make a complaint",team:"Invite team member",reminder:"Send reminder",subscribe:"Upgrade to Premium"};return <div className="modal-backdrop" onMouseDown={e=>e.target===e.currentTarget&&close()}><div className="modal"><h2>{title[kind]}</h2>{note&&<p className="notice">{note}</p>}{kind==="property"&&<form className="form" onSubmit={e=>submit(e,"property")}><label>Property photo<input name="image" type="file" accept="image/*" required/></label><label>Name<input name="name" required/></label><label>Address<input name="address" required/></label><div className="form-row"><label>Units<input name="units" type="number" min="1" defaultValue="1"/></label><label>Monthly rent<input name="monthlyRent" type="number" min="0"/></label></div><Actions close={close}/></form>}{kind==="tenancy"&&<form className="form" onSubmit={e=>submit(e,"tenancy")}><label>Property<select name="propertyId">{data.properties.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><label>Tenant name<input name="tenantName" required/></label><label>Tenant email<input name="tenantEmail" type="email" required/></label><div className="form-row"><label>Unit<input name="unit" required/></label><label>Monthly rent<input name="rentAmount" type="number" required/></label></div><label>WhatsApp number<input name="phone"/></label><Actions close={close}/></form>}{kind==="receipt"&&<UploadForm type="rent" data={data} close={close} submit={submit}/>} {kind==="bill"&&<UploadForm type="bill" data={data} close={close} submit={submit}/>} {kind==="complaint"&&<form className="form" onSubmit={e=>submit(e,"complaint")}><label>Tenancy<select name="tenancyId">{data.tenancies.map(t=><option key={t.id} value={t.id}>{t.unit}</option>)}</select></label><label>Category<select name="category"><option>Maintenance</option><option>Electricity</option><option>Water</option><option>Security</option><option>Other</option></select></label><label>Subject<input name="subject" required/></label><label>Details<textarea name="details" rows={4} required/></label><label>Priority<select name="priority"><option>normal</option><option>urgent</option></select></label><Actions close={close}/></form>}{kind==="team"&&<form className="form" onSubmit={e=>submit(e,"team")}><label>Email<input name="memberEmail" type="email" required/></label><label>Role<select name="role"><option value="manager">Manager</option><option value="viewer">Viewer</option></select></label><Actions close={close}/></form>}{kind==="reminder"&&<Reminder data={data} close={close}/>} {kind==="subscribe"&&<form className="form" onSubmit={e=>submit(e,"subscription")}><p>Premium unlocks unlimited properties.</p><input type="hidden" name="provider" value={gateway}/><div className="gateway-cards">{[["paystack","P","Paystack"],["flutterwave","F","Flutterwave"],["stripe","S","Stripe"]].map(g=><button type="button" key={g[0]} className={gateway===g[0]?"selected":""} onClick={()=>setGateway(g[0])}><i>{g[1]}</i>{g[2]}</button>)}</div><Actions close={close} label="Continue to payment"/></form>}</div></div>}
-function UploadForm({type,data,close,submit}:{type:string;data:Data;close:()=>void;submit:(e:React.FormEvent<HTMLFormElement>,a:string)=>void}){return <form className="form" onSubmit={e=>submit(e,type==="bill"?"bill":"receipt")}><label>Tenancy<select name="tenancyId">{data.tenancies.map(t=><option key={t.id} value={t.id}>{t.unit}</option>)}</select></label>{type==="bill"?<label>Bill type<select name="billType"><option>Electricity</option><option>Water</option><option>Waste</option><option>Service charge</option></select></label>:<label>Payment method<select name="method"><option>Bank transfer</option><option>Cash deposit</option><option>Cheque</option><option>Other</option></select></label>}<div className="form-row"><label>Amount<input name="amount" type="number" required/></label><label>Period<input name="period" type="month" required/></label></div>{type!=="bill"&&<><label>Payment date<input name="paidAt" type="date" required/></label><label>Reference<input name="reference"/></label></>}<label>Receipt image or PDF<input name="receipt" type="file" accept="image/*,.pdf" required/></label><Actions close={close}/></form>}
-function Actions({close,label="Save"}:{close:()=>void;label?:string}){return <div className="modal-actions"><button type="button" className="button ghost" onClick={close}>Cancel</button><button className="button">{label}</button></div>}function Reminder({data,close}:{data:Data;close:()=>void}){const [id,setId]=useState(String(data.tenancies[0]?.id||"")),t=data.tenancies.find(x=>String(x.id)===id),msg=encodeURIComponent(`Hello ${t?.tenantName||"there"}, this is a friendly rent reminder from your landlord. Please upload your receipt in RentPilot after payment.`);return <div className="form"><label>Tenant<select value={id} onChange={e=>setId(e.target.value)}>{data.tenancies.map(x=><option key={x.id} value={x.id}>{x.tenantName}</option>)}</select></label><div className="modal-actions"><button className="button ghost" onClick={close}>Cancel</button><a className="button" href={`mailto:${t?.tenantEmail}?subject=Rent reminder&body=${msg}`}>Email</a><a className="button" target="_blank" href={`https://wa.me/${String(t?.phone||"").replace(/\D/g,"")}?text=${msg}`}>WhatsApp</a></div></div>}
-function Settings({profile}:{profile:Row|null}){const [message,setMessage]=useState(""),[dark,setDark]=useState(false);useEffect(()=>setDark(localStorage.getItem("rentpilot-theme")==="dark"),[]);const toggle=()=>{const next=!dark;setDark(next);localStorage.setItem("rentpilot-theme",next?"dark":"light");document.documentElement.classList.toggle("dark-app",next)};const save=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();const r=await fetch("/api/settings",{method:"POST",body:new FormData(e.currentTarget)}),j=await r.json();setMessage(r.ok?j.message:j.error)};return <div className="settings-grid"><section className="settings-menu app-card"><b>Account settings</b><a href="#profile">Profile</a><a href="#kyc">Identity & KYC</a><a href="#preferences">Preferences</a><a href="#security">Security</a></section><form className="settings-content" onSubmit={save}>{message&&<p className="notice">{message}</p>}<section id="profile" className="app-card settings-section"><div><h2>Profile details</h2><p>Keep your personal and contact information current.</p></div><div className="form"><label>Full name<input name="name" defaultValue={String(profile?.name||"")} required/></label><label>Email address<input value={String(profile?.email||"")} disabled/></label><div className="form-row"><label>Phone number<input name="phone" defaultValue={String(profile?.phone||"")} placeholder="+2348012345678" required/></label><label>Account role<input value={String(profile?.role||"")} disabled/></label></div><label>Contact address<textarea name="address" rows={3} defaultValue={String(profile?.address||"")}/></label></div></section><section id="kyc" className="app-card settings-section"><div className="settings-title"><div><h2>Identity verification</h2><p>Submit one government-issued identity document. Your file stays private.</p></div><span className={`kyc-badge ${profile?.kycStatus}`}>{String(profile?.kycStatus||"not_started").replaceAll("_"," ")}</span></div><div className="kyc-notice">🔒 Accepted: NIN slip, national ID, driver’s licence, voter’s card or passport. Image/PDF, maximum 5 MB.</div><div className="form-row"><label>ID type<select name="idType" defaultValue={String(profile?.idType||"")}><option value="">Choose document</option><option>National ID / NIN</option><option>Driver's licence</option><option>Voter's card</option><option>International passport</option></select></label><label>ID number<input name="idNumber" defaultValue={String(profile?.idNumber||"")}/></label></div><label className="upload-zone">ID card or document<input name="idCard" type="file" accept="image/*,.pdf"/><span>Click to choose a clear image or PDF</span></label>{profile?.idName&&<a className="document-link" target="_blank" href="/api/settings/id">View current document: {String(profile.idName)}</a>}</section><section id="preferences" className="app-card settings-section"><div><h2>Preferences</h2><p>Choose how RentPilot looks and contacts you.</p></div><div className="setting-row"><div><b>Dark mode</b><small>Use a darker dashboard colour scheme on this device.</small></div><button type="button" aria-pressed={dark} className={`switch ${dark?"on":""}`} onClick={toggle}><i/></button></div><label className="setting-row"><div><b>Email notifications</b><small>Rent confirmations, bills and complaints.</small></div><input name="emailNotifications" type="checkbox" defaultChecked={profile?.emailNotifications!==false}/></label><label className="setting-row"><div><b>WhatsApp reminders</b><small>Allow reminder links to use your saved phone number.</small></div><input name="whatsappNotifications" type="checkbox" defaultChecked={profile?.whatsappNotifications!==false}/></label></section><section id="security" className="app-card settings-section"><div><h2>Security</h2><p>Your account uses secure ChatGPT sign-in. RentPilot never stores your password.</p></div><div className="security-card"><span>✓</span><div><b>Secure sign-in enabled</b><small>Sign-in and account recovery are managed through your ChatGPT account.</small></div></div></section><div className="save-bar"><button className="button">Save settings</button></div></form></div>}
-function navIcon(x:string){return ({Overview:"⌂",Marketplace:"⌕",Properties:"▦",Tenancies:"♙","Rent records":"▤",Reminders:"✉","Complaints & bills":"⚠","Team & access":"♚",Subscription:"◆",Settings:"⚙"} as Record<string,string>)[x]}function subtitle(tab:string,tenant:boolean){if(tenant)return tab==="Overview"?"Your tenancy, payments, bills and complaints in one place.":"Keep your landlord updated with clear records.";return tab==="Overview"?"See what is happening across your rental portfolio.":"Manage this part of your rental workspace."}
+
+import Link from "next/link";
+import NotificationBell from "./notification-bell";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import { apiFetch } from "../../lib/api";
+import styles from "../management.module.css";
+
+type Property = {
+  id: string;
+  name: string;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  status?: string;
+};
+
+type Unit = {
+  id: string;
+  property_id: string;
+  unit_number: string;
+  status: string;
+};
+
+type Tenant = {
+  id: string;
+  full_name: string;
+  email?: string | null;
+  status: string;
+};
+
+type Lease = {
+  id: string;
+  unit_id: string;
+  tenant_id: string;
+  rent_amount: number | string;
+  payment_frequency: string;
+  status: string;
+  start_date: string;
+  end_date: string;
+};
+
+type RentCharge = {
+  id: string;
+  lease_id: string;
+  due_date: string;
+  expected_amount: number | string;
+  paid_amount: number | string;
+  balance: number | string;
+  status: string;
+};
+
+type RentPayment = {
+  id: string;
+  lease_id: string;
+  rent_charge_id?: string | null;
+  amount: number | string;
+  payment_date: string;
+  payment_method: string;
+  reference?: string | null;
+};
+
+type MaintenanceRequest = {
+  id: string;
+  title: string;
+  status: string;
+  priority: string;
+  property_id: string;
+  unit_id: string | null;
+  created_at: string;
+};
+
+type ListResponse<T> = {
+  success: true;
+  data: T[];
+};
+
+type DashboardProps = {
+  user: {
+    displayName: string;
+    email: string;
+  };
+  signOut: string;
+  initialRole: string | null;
+};
+
+function money(value: number | string) {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
+}
+
+function humanize(value: string) {
+  return value
+    .toLowerCase()
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (letter) =>
+      letter.toUpperCase(),
+    );
+}
+
+export default function Dashboard({
+  user,
+  signOut,
+}: DashboardProps) {
+  const [properties, setProperties] =
+    useState<Property[]>([]);
+
+  const [units, setUnits] =
+    useState<Unit[]>([]);
+
+  const [tenants, setTenants] =
+    useState<Tenant[]>([]);
+
+  const [leases, setLeases] =
+    useState<Lease[]>([]);
+
+  const [charges, setCharges] =
+    useState<RentCharge[]>([]);
+
+  const [payments, setPayments] =
+    useState<RentPayment[]>([]);
+
+  const [maintenance, setMaintenance] =
+    useState<MaintenanceRequest[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  const loadDashboard = useCallback(
+    async () => {
+      try {
+        setError(null);
+
+        const [
+          propertyResponse,
+          unitResponse,
+          tenantResponse,
+          leaseResponse,
+          chargeResponse,
+          paymentResponse,
+          maintenanceResponse,
+        ] = await Promise.all([
+          apiFetch<ListResponse<Property>>(
+            "/properties",
+          ),
+          apiFetch<ListResponse<Unit>>(
+            "/units",
+          ),
+          apiFetch<ListResponse<Tenant>>(
+            "/tenants",
+          ),
+          apiFetch<ListResponse<Lease>>(
+            "/leases",
+          ),
+          apiFetch<ListResponse<RentCharge>>(
+            "/rent-charges",
+          ),
+          apiFetch<ListResponse<RentPayment>>(
+            "/rent-payments",
+          ),
+
+          apiFetch<ListResponse<MaintenanceRequest>>(
+            "/maintenance",
+          ),
+        ]);
+
+        setProperties(
+          propertyResponse.data,
+        );
+
+        setUnits(
+          unitResponse.data,
+        );
+
+        setTenants(
+          tenantResponse.data,
+        );
+
+        setLeases(
+          leaseResponse.data,
+        );
+
+        setCharges(
+          chargeResponse.data,
+        );
+
+        setPayments(
+          paymentResponse.data,
+        );
+
+        setMaintenance(
+          maintenanceResponse.data,
+        );
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Unable to load your RentPilot workspace.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    void loadDashboard();
+  }, [loadDashboard]);
+
+  const activeLeases = useMemo(
+    () =>
+      leases.filter((lease) =>
+        [
+          "ACTIVE",
+          "EXPIRING_SOON",
+        ].includes(lease.status),
+      ),
+    [leases],
+  );
+
+  const occupiedUnits = useMemo(
+    () =>
+      units.filter(
+        (unit) =>
+          unit.status === "OCCUPIED",
+      ),
+    [units],
+  );
+
+  const vacantUnits = useMemo(
+    () =>
+      units.filter(
+        (unit) =>
+          unit.status === "VACANT",
+      ),
+    [units],
+  );
+
+  const outstandingCharges = useMemo(
+    () =>
+      charges.filter(
+        (charge) =>
+          !["PAID", "WAIVED"].includes(
+            charge.status,
+          ),
+      ),
+    [charges],
+  );
+
+  const overdueCharges = useMemo(
+    () =>
+      charges.filter(
+        (charge) =>
+          charge.status === "OVERDUE",
+      ),
+    [charges],
+  );
+
+  const totalOutstanding = useMemo(
+    () =>
+      outstandingCharges.reduce(
+        (sum, charge) =>
+          sum +
+          Number(
+            charge.balance || 0,
+          ),
+        0,
+      ),
+    [outstandingCharges],
+  );
+
+  const totalOverdue = useMemo(
+    () =>
+      overdueCharges.reduce(
+        (sum, charge) =>
+          sum +
+          Number(
+            charge.balance || 0,
+          ),
+        0,
+      ),
+    [overdueCharges],
+  );
+
+  const totalCollected = useMemo(
+    () =>
+      payments.reduce(
+        (sum, payment) =>
+          sum +
+          Number(
+            payment.amount || 0,
+          ),
+        0,
+      ),
+    [payments],
+  );
+
+  const tenantById = useMemo(
+    () =>
+      new Map(
+        tenants.map((tenant) => [
+          tenant.id,
+          tenant,
+        ]),
+      ),
+    [tenants],
+  );
+
+  const unitById = useMemo(
+    () =>
+      new Map(
+        units.map((unit) => [
+          unit.id,
+          unit,
+        ]),
+      ),
+    [units],
+  );
+
+  const propertyById = useMemo(
+    () =>
+      new Map(
+        properties.map(
+          (property) => [
+            property.id,
+            property,
+          ],
+        ),
+      ),
+    [properties],
+  );
+
+  const leaseById = useMemo(
+    () =>
+      new Map(
+        leases.map((lease) => [
+          lease.id,
+          lease,
+        ]),
+      ),
+    [leases],
+  );
+
+  const recentPayments = useMemo(
+    () =>
+      [...payments]
+        .sort(
+          (a, b) =>
+            new Date(
+              b.payment_date,
+            ).getTime() -
+            new Date(
+              a.payment_date,
+            ).getTime(),
+        )
+        .slice(0, 5),
+    [payments],
+  );
+
+  const openMaintenance = useMemo(
+    () =>
+      maintenance.filter(
+        (request) =>
+          ![
+            "RESOLVED",
+            "CANCELLED",
+          ].includes(request.status),
+      ),
+    [maintenance],
+  );
+
+  const urgentMaintenance = useMemo(
+    () =>
+      maintenance.filter(
+        (request) =>
+          request.priority === "URGENT" &&
+          ![
+            "RESOLVED",
+            "CANCELLED",
+          ].includes(request.status),
+      ),
+    [maintenance],
+  );
+
+  const inProgressMaintenance = useMemo(
+    () =>
+      maintenance.filter(
+        (request) =>
+          request.status === "IN_PROGRESS",
+      ),
+    [maintenance],
+  );
+
+  const occupancyRate =
+    units.length > 0
+      ? Math.round(
+          (occupiedUnits.length /
+            units.length) *
+            100,
+        )
+      : 0;
+
+  return (
+    <main className={styles.page}>
+      <div className={styles.shell}>
+        <div className={styles.topbar}>
+          <Link
+            className={styles.back}
+            href="/"
+          >
+            RentPilot
+          </Link>
+
+          <nav className={styles.nav}>
+            <Link href="/properties/new">
+              Add property
+            </Link>
+
+            <Link href="/tenants">
+              Tenants
+            </Link>
+
+            <Link href="/leases">
+              Leases
+            </Link>
+
+            <Link href="/rent">
+              Rent
+            </Link>
+
+            <Link href="/payments">
+              Payments
+            </Link>
+
+            <NotificationBell />
+
+            <form
+              action={signOut}
+              method="post"
+            >
+              <button
+                type="submit"
+              >
+                Sign out
+              </button>
+            </form>
+          </nav>
+        </div>
+
+        <header
+          className={`${styles.header} ${styles.dashboardHero}`}
+        >
+          <div>
+            <span
+              className={styles.eyebrow}
+            >
+              PORTFOLIO OVERVIEW
+            </span>
+
+            <h1>
+              Welcome back,{" "}
+              {user.displayName}.
+            </h1>
+
+            <p>
+              See the health of your
+              rental portfolio and the
+              actions that need your
+              attention.
+            </p>
+          </div>
+
+          <Link
+            className={styles.primary}
+            href="/properties/new"
+          >
+            + Add property
+          </Link>
+        </header>
+
+        {error ? (
+          <div
+            className={styles.error}
+            role="alert"
+          >
+            {error}
+          </div>
+        ) : null}
+
+        {loading ? (
+          <section
+            className={styles.card}
+          >
+            <div
+              className={styles.empty}
+            >
+              Loading portfolio…
+            </div>
+          </section>
+        ) : (
+          <>
+            <section
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(190px, 1fr))",
+                gap: 16,
+                marginBottom: 28,
+              }}
+            >
+              <article
+                className={styles.card}
+              >
+                <small>
+                  Properties
+                </small>
+
+                <h2>
+                  {properties.length}
+                </h2>
+
+                <p>
+                  {units.length} total
+                  units
+                </p>
+              </article>
+
+              <article
+                className={styles.card}
+              >
+                <small>
+                  Occupancy
+                </small>
+
+                <h2>
+                  {occupancyRate}%
+                </h2>
+
+                <p>
+                  {occupiedUnits.length}{" "}
+                  occupied ·{" "}
+                  {vacantUnits.length}{" "}
+                  vacant
+                </p>
+              </article>
+
+              <article
+                className={styles.card}
+              >
+                <small>
+                  Active leases
+                </small>
+
+                <h2>
+                  {
+                    activeLeases.length
+                  }
+                </h2>
+
+                <p>
+                  {tenants.length} tenant
+                  records
+                </p>
+              </article>
+
+              <article
+                className={styles.card}
+              >
+                <small>
+                  Outstanding rent
+                </small>
+
+                <h2>
+                  {money(
+                    totalOutstanding,
+                  )}
+                </h2>
+
+                <p>
+                  {
+                    outstandingCharges.length
+                  }{" "}
+                  open charges
+                </p>
+              </article>
+
+              <article
+                className={styles.card}
+              >
+                <small>
+                  Overdue rent
+                </small>
+
+                <h2>
+                  {money(
+                    totalOverdue,
+                  )}
+                </h2>
+
+                <p>
+                  {
+                    overdueCharges.length
+                  }{" "}
+                  overdue charges
+                </p>
+              </article>
+
+              <article
+                className={styles.card}
+              >
+                <small>
+                  Recorded payments
+                </small>
+
+                <h2>
+                  {money(
+                    totalCollected,
+                  )}
+                </h2>
+
+                <p>
+                  {payments.length} payment
+                  records
+                </p>
+              </article>
+
+              <article
+                className={styles.card}
+              >
+                <small>
+                  Open maintenance
+                </small>
+
+                <h2>
+                  {openMaintenance.length}
+                </h2>
+
+                <p>
+                  {urgentMaintenance.length} urgent ·{" "}
+                  {inProgressMaintenance.length} in progress
+                </p>
+              </article>
+            </section>
+
+            <section
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(320px, 1fr))",
+                gap: 24,
+              }}
+            >
+              <article
+                className={styles.card}
+              >
+                <div
+                  className={
+                    styles.header
+                  }
+                >
+                  <div>
+                    <span
+                      className={
+                        styles.eyebrow
+                      }
+                    >
+                      ACTION CENTER
+                    </span>
+
+                    <h2>
+                      Overdue rent
+                    </h2>
+                  </div>
+
+                  <Link href="/rent">
+                    View rent →
+                  </Link>
+                </div>
+
+                {overdueCharges.length ===
+                0 ? (
+                  <div
+                    className={
+                      styles.empty
+                    }
+                  >
+                    No overdue rent.
+                  </div>
+                ) : (
+                  <div
+                    className={
+                      styles.list
+                    }
+                  >
+                    {overdueCharges
+                      .slice(0, 5)
+                      .map((charge) => {
+                        const lease =
+                          leaseById.get(
+                            charge.lease_id,
+                          );
+
+                        const tenant =
+                          lease
+                            ? tenantById.get(
+                                lease.tenant_id,
+                              )
+                            : undefined;
+
+                        const unit =
+                          lease
+                            ? unitById.get(
+                                lease.unit_id,
+                              )
+                            : undefined;
+
+                        const property =
+                          unit
+                            ? propertyById.get(
+                                unit.property_id,
+                              )
+                            : undefined;
+
+                        return (
+                          <div
+                            key={
+                              charge.id
+                            }
+                            className={
+                              styles.row
+                            }
+                          >
+                            <div>
+                              <strong>
+                                {tenant?.full_name ??
+                                  "Tenant"}
+                              </strong>
+
+                              <small>
+                                {property?.name ??
+                                  "Property"}
+                                {unit
+                                  ? ` · Unit ${unit.unit_number}`
+                                  : ""}
+                              </small>
+                            </div>
+
+                            <div>
+                              <strong>
+                                {money(
+                                  charge.balance,
+                                )}
+                              </strong>
+
+                              <small>
+                                Due{" "}
+                                {
+                                  charge.due_date
+                                }
+                              </small>
+                            </div>
+
+                            <Link
+                              href={`/payments/new?chargeId=${charge.id}`}
+                            >
+                              Record payment
+                              →
+                            </Link>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </article>
+
+              <article
+                className={styles.card}
+              >
+                <div
+                  className={
+                    styles.header
+                  }
+                >
+                  <div>
+                    <span
+                      className={
+                        styles.eyebrow
+                      }
+                    >
+                      RECENT ACTIVITY
+                    </span>
+
+                    <h2>
+                      Rent payments
+                    </h2>
+                  </div>
+
+                  <Link href="/payments">
+                    All payments →
+                  </Link>
+                </div>
+
+                {recentPayments.length ===
+                0 ? (
+                  <div
+                    className={
+                      styles.empty
+                    }
+                  >
+                    No payments recorded
+                    yet.
+                  </div>
+                ) : (
+                  <div
+                    className={
+                      styles.list
+                    }
+                  >
+                    {recentPayments.map(
+                      (payment) => {
+                        const lease =
+                          leaseById.get(
+                            payment.lease_id,
+                          );
+
+                        const tenant =
+                          lease
+                            ? tenantById.get(
+                                lease.tenant_id,
+                              )
+                            : undefined;
+
+                        return (
+                          <div
+                            key={
+                              payment.id
+                            }
+                            className={
+                              styles.row
+                            }
+                          >
+                            <div>
+                              <strong>
+                                {tenant?.full_name ??
+                                  "Tenant"}
+                              </strong>
+
+                              <small>
+                                {
+                                  payment.payment_date
+                                }
+                              </small>
+                            </div>
+
+                            <strong>
+                              {money(
+                                payment.amount,
+                              )}
+                            </strong>
+
+                            <span>
+                              {humanize(
+                                payment.payment_method,
+                              )}
+                            </span>
+                          </div>
+                        );
+                      },
+                    )}
+                  </div>
+                )}
+              </article>
+            </section>
+
+            <section
+              className={styles.card}
+              style={{
+                marginTop: 24,
+              }}
+            >
+              <div
+                className={
+                  styles.header
+                }
+              >
+                <div>
+                  <span
+                    className={
+                      styles.eyebrow
+                    }
+                  >
+                    WORKSPACE
+                  </span>
+
+                  <h2>
+                    Manage your rental
+                    operations
+                  </h2>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                <Link
+                  className={
+                    styles.secondary
+                  }
+                  href="/properties/new"
+                >
+                  Add property
+                </Link>
+
+                <Link
+                  className={
+                    styles.secondary
+                  }
+                  href="/tenants"
+                >
+                  Manage tenants
+                </Link>
+
+                <Link
+                  className={
+                    styles.secondary
+                  }
+                  href="/leases"
+                >
+                  Manage leases
+                </Link>
+
+                <Link
+                  className={
+                    styles.secondary
+                  }
+                  href="/rent"
+                >
+                  Rent & overdue
+                </Link>
+
+                <Link
+                  className={
+                    styles.secondary
+                  }
+                  href="/payments/new"
+                >
+                  Record payment
+                </Link>
+
+                <Link
+                  className={
+                    styles.secondary
+                  }
+                  href="/payments"
+                >
+                  Payment history
+                </Link>
+
+                <Link
+                  className={
+                    styles.secondary
+                  }
+                  href="/maintenance"
+                >
+                  Maintenance
+                </Link>
+
+                <Link
+                  className={
+                    styles.secondary
+                  }
+                  href="/documents"
+                >
+                  Documents
+                </Link>
+              </div>
+            </section>
+          </>
+        )}
+
+        <footer
+          style={{
+            marginTop: 30,
+            opacity: 0.65,
+            fontSize: 13,
+          }}
+        >
+          Signed in as {user.email}
+        </footer>
+      </div>
+    </main>
+  );
+}

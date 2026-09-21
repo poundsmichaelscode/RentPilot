@@ -1,1 +1,38 @@
-{"name":"@rentpilot/api","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"tsx watch src/server.ts","build":"tsc -p tsconfig.json","start":"node dist/server.js","typecheck":"tsc --noEmit"},"dependencies":{"@rentpilot/shared":"*","@supabase/supabase-js":"^2.57.4","cors":"^2.8.5","dotenv":"^17.2.2","express":"^5.1.0","helmet":"^8.1.0","morgan":"^1.10.1","zod":"^4.1.11"},"devDependencies":{"@types/cors":"^2.8.19","@types/express":"^5.0.3","@types/morgan":"^1.9.10","@types/node":"^22.18.6","tsx":"^4.20.5","typescript":"^5.9.2"}}
+{
+  "name": "@rentpilot/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "dev:worker": "tsx watch src/worker.ts",
+    "start:worker": "node dist/worker.js",
+    "test": "tsx --test src/**/*.test.ts",
+    "test:integration:payments": "tsx --test integration-tests/rent-payment.test.ts"
+  },
+  "dependencies": {
+    "@rentpilot/shared": "*",
+    "@supabase/supabase-js": "^2.57.4",
+    "bullmq": "^6.3.4",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "ioredis": "^6.0.0",
+    "morgan": "^1.10.1",
+    "nodemailer": "^10.0.1",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^22.18.6",
+    "@types/nodemailer": "^8.0.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}

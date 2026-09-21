@@ -1,0 +1,564 @@
+.page {
+  min-height: 100vh;
+  background:
+    #f5f7f6;
+  color: #18221e;
+}
+
+.shell {
+  width: min(1180px, calc(100% - 36px));
+  margin: 0 auto;
+  padding: 28px 0 70px;
+}
+
+.topbar {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #829089;
+  font-size: 13px;
+}
+
+.breadcrumbs a {
+  color: #3f594d;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  color: #153d2e;
+}
+
+.topActions {
+  display: flex;
+  gap: 10px;
+}
+
+.primaryButton,
+.secondaryButton,
+.outlineButton {
+  min-height: 42px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 17px;
+  border-radius: 9px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
+  transition:
+    transform 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.primaryButton {
+  background: #173f30;
+  border: 1px solid #173f30;
+  color: #fff;
+}
+
+.primaryButton:hover {
+  background: #102f24;
+}
+
+.secondaryButton {
+  background: #fff;
+  border: 1px solid #d9e0dd;
+  color: #233c31;
+}
+
+.secondaryButton:hover {
+  border-color: #aebdb6;
+  background: #fafcfb;
+}
+
+.outlineButton {
+  border: 1px solid #cad7d1;
+  color: #254a39;
+  background: transparent;
+}
+
+.outlineButton:hover {
+  background: #fff;
+}
+
+.primaryButton:active,
+.secondaryButton:active,
+.outlineButton:active {
+  transform: translateY(1px);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 22px;
+  align-items: center;
+  padding: 30px;
+  background: #fff;
+  border: 1px solid #e0e6e3;
+  border-radius: 18px;
+  box-shadow:
+    0 12px 35px rgba(24, 48, 38, 0.05);
+}
+
+.propertyMark {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: #173f30;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.heroContent h1 {
+  margin: 8px 0 7px;
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.heroMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.typeBadge,
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.typeBadge {
+  background: #eef3f0;
+  color: #496057;
+}
+
+.statusBadge {
+  background: #eaf6ef;
+  color: #266443;
+}
+
+.address {
+  margin: 0;
+  color: #69756f;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.description {
+  max-width: 720px;
+  margin: 12px 0 0;
+  color: #65716b;
+  line-height: 1.65;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.metricCard {
+  padding: 22px;
+  border: 1px solid #e0e6e3;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.metricCard > span {
+  display: block;
+  color: #718078;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.metricCard strong {
+  display: block;
+  margin: 8px 0 7px;
+  color: #18221e;
+  font-size: 27px;
+  letter-spacing: -0.035em;
+}
+
+.metricCard small {
+  color: #94a09a;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.occupancyCard {
+  margin-top: 18px;
+  padding: 24px 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  border-radius: 14px;
+  background: #102f24;
+  color: #fff;
+}
+
+.sectionLabel {
+  display: block;
+  margin-bottom: 7px;
+  color: #73867d;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.occupancyCard .sectionLabel {
+  color: #a9c7b9;
+}
+
+.occupancyCard h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.occupancyCard p {
+  margin: 6px 0 0;
+  color: #cbdad3;
+  font-size: 13px;
+}
+
+.occupancyRight {
+  width: min(330px, 45%);
+  text-align: right;
+}
+
+.occupancyRight strong {
+  display: block;
+  margin-bottom: 9px;
+  font-size: 26px;
+}
+
+.progress {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+}
+
+.progressValue {
+  height: 100%;
+  border-radius: inherit;
+  background: #d7eee3;
+  transition: width 250ms ease;
+}
+
+.unitsSection {
+  margin-top: 34px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.sectionHead h2 {
+  margin: 0;
+  font-size: 27px;
+  letter-spacing: -0.035em;
+}
+
+.sectionHead p {
+  margin: 7px 0 0;
+  color: #75817b;
+  font-size: 13px;
+}
+
+.unitGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.unitCard {
+  padding: 22px;
+  background: #fff;
+  border: 1px solid #e0e6e3;
+  border-radius: 14px;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+
+.unitCard:hover {
+  transform: translateY(-2px);
+  border-color: #cbd6d1;
+  box-shadow:
+    0 14px 30px rgba(24, 48, 38, 0.06);
+}
+
+.unitTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.unitLabel {
+  color: #85928c;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+}
+
+.unitTop h3 {
+  margin: 5px 0 0;
+  font-size: 20px;
+  letter-spacing: -0.025em;
+}
+
+.vacant,
+.occupied,
+.neutral {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 27px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.vacant {
+  background: #edf8f1;
+  color: #296744;
+}
+
+.occupied {
+  background: #eef2fb;
+  color: #405b98;
+}
+
+.neutral {
+  background: #f3f3f1;
+  color: #666d69;
+}
+
+.vacant i,
+.occupied i,
+.neutral i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.unitDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 21px;
+}
+
+.unitDetails span {
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: #f5f7f6;
+  color: #66736d;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.rentBlock {
+  margin-top: 24px;
+  padding-top: 19px;
+  border-top: 1px solid #edf0ef;
+}
+
+.rentBlock small {
+  display: block;
+  color: #8b9691;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.rentBlock strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 25px;
+  letter-spacing: -0.035em;
+}
+
+.unitFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-top: 22px;
+}
+
+.unitLink,
+.smallLink {
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.unitLink {
+  color: #173f30;
+  font-size: 13px;
+}
+
+.smallLink {
+  color: #78847e;
+  font-size: 11px;
+}
+
+.unitLink:hover,
+.smallLink:hover {
+  text-decoration: underline;
+}
+
+.disabledAction {
+  color: #9aa39f;
+  font-size: 12px;
+}
+
+.empty,
+.loading,
+.error {
+  padding: 42px 24px;
+  border: 1px solid #e0e6e3;
+  border-radius: 14px;
+  background: #fff;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #edf3f0;
+  color: #244b39;
+  font-weight: 900;
+}
+
+.empty h3 {
+  margin: 0;
+}
+
+.empty p {
+  color: #7e8984;
+}
+
+.error {
+  color: #a33f3f;
+  background: #fff7f7;
+  border-color: #eccccc;
+}
+
+@media (max-width: 900px) {
+  .metrics {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .unitGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    grid-template-columns: auto 1fr;
+  }
+
+  .heroAction {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    width: min(100% - 24px, 1180px);
+    padding-top: 18px;
+  }
+
+  .topbar,
+  .sectionHead,
+  .occupancyCard {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .topActions {
+    width: 100%;
+  }
+
+  .topActions a {
+    flex: 1;
+  }
+
+  .hero {
+    display: block;
+    padding: 22px;
+  }
+
+  .propertyMark {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 18px;
+    font-size: 17px;
+  }
+
+  .heroAction {
+    margin-top: 20px;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .metricCard {
+    padding: 17px;
+  }
+
+  .metricCard strong {
+    font-size: 21px;
+  }
+
+  .occupancyRight {
+    width: 100%;
+    text-align: left;
+  }
+
+  .unitFooter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ??
+      "http://localhost:3000",
+  ),
   title: "RentPilot — Rent, managed with confidence",
   description: "A shared rent management workspace for landlords, tenants and property teams.",
   openGraph: { title: "RentPilot", description: "Rent, managed with confidence.", images: ["/og.png"] },
